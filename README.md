@@ -23,6 +23,18 @@ TardyTrack is a student attendance and dropout early-warning system with a plann
 
 ## Run locally (CMD)
 
+### One-command launcher
+
+From the project directory, run:
+
+```cmd
+run-system
+```
+
+The launcher applies pending Django migrations and starts both the backend and React frontend in one CMD window. Open `http://localhost:3000/`. Press `Ctrl+C` once to stop both processes.
+
+### Manual startup
+
 ```cmd
 cd /d C:\xampp\htdocs\TARDYTRACK
 .venv\Scripts\activate
