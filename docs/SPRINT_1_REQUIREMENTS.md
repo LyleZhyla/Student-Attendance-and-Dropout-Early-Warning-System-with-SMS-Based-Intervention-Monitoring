@@ -67,7 +67,7 @@ Each case retains student, reason, assigned personnel, schedule, findings, follo
 ## Sprint acceptance criteria
 
 - Project starts with documented commands.
-- Login redirects anonymous users and authenticated users see a dashboard shell.
+- Django and React login flows reject anonymous access; authenticated React users receive a role-aware dashboard shell backed by token-protected metrics.
 - Initial models migrate from a clean database.
 - PostgreSQL configuration is available; SQLite enables immediate development.
 - Database constraints and model validation cover core attendance invariants.

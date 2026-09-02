@@ -13,17 +13,33 @@ TardyTrack is a student attendance and dropout early-warning system with a plann
 - Business rules, permissions, architecture, and ERD documentation
 - Automated foundation and attendance-validation tests
 
-## Run locally (PowerShell)
+## Run locally (CMD)
 
-```powershell
-py -3.14 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe manage.py migrate
-.\.venv\Scripts\python.exe manage.py createsuperuser
-.\.venv\Scripts\python.exe manage.py runserver
+```cmd
+cd /d C:\xampp\htdocs\TARDYTRACK
+.venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
 ```
 
-Open `http://127.0.0.1:8000/`. SQLite is used when `POSTGRES_DB` is not set. To use PostgreSQL, copy `.env.example` values into the process environment before starting Django.
+In a second CMD window, run the React interface:
+
+```cmd
+cd /d C:\xampp\htdocs\TARDYTRACK\react-ui
+npm install --legacy-peer-deps
+set NODE_OPTIONS=--openssl-legacy-provider
+npm start
+```
+
+Open `http://localhost:3000/`. Django runs at `http://127.0.0.1:8000/` and remains the canonical backend. SQLite is used when `POSTGRES_DB` is not set.
+
+The imported `api-server-django/` directory belongs to the original UI starter and is retained locally as reference only. It is Git-ignored: do not run or publish it for TardyTrack because it has a separate generic user model that is not connected to the approved schema.
+
+### Template dependency note
+
+The imported Berry template uses a legacy React 17 / Material UI beta dependency set. It builds successfully, but `npm audit` reports known transitive-package vulnerabilities. Treat the current UI as a development baseline and schedule a controlled dependency modernization before any public production deployment; do not run `npm audit fix --force` without a tested migration because it introduces breaking changes.
 
 ## Documentation
 
