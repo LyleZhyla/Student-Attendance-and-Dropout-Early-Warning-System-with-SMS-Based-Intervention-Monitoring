@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Sign in · TardyTrack{% endblock %}
+{% block content %}
+<section class="auth-card">
+    <p class="eyebrow">Student support platform</p>
+    <h1>Welcome back</h1>
+    <p class="muted">Sign in to continue to your secure workspace.</p>
+    {% if form.errors %}<div class="alert">Your username or password is incorrect.</div>{% endif %}
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        <label for="id_username">Username</label>
+        {{ form.username }}
+        <label for="id_password">Password</label>
+        {{ form.password }}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button class="primary-button" type="submit">Sign in</button>
+    </form>
+</section>
+{% endblock %}

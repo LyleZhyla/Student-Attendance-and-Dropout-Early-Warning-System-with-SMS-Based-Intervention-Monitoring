@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard · TardyTrack{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">{{ role_label }} workspace</p>
+        <h1>Hello, {{ user.get_full_name|default:user.username }}.</h1>
+        <p class="muted">The Sprint 1 foundation is ready. Operational dashboard cards will connect to real attendance data in the next feature sprints.</p>
+    </div>
+    <span class="status-pill">Foundation ready</span>
+</section>
+<section class="grid">
+    <article class="card"><span>01</span><h2>Accounts</h2><p>Role-ready user foundation</p></article>
+    <article class="card"><span>02</span><h2>Student records</h2><p>Profiles, guardians, and enrollment schema</p></article>
+    <article class="card"><span>03</span><h2>Attendance</h2><p>Validated attendance data model</p></article>
+</section>
+{% endblock %}
