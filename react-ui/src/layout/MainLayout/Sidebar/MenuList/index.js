@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 
 // material-ui
 import { Typography } from '@material-ui/core';
@@ -10,7 +11,14 @@ import menuItem from './../../../../menu-items';
 //-----------------------|| SIDEBAR MENU LIST ||-----------------------//
 
 const MenuList = () => {
-    const navItems = menuItem.items.map((item) => {
+    const role = useSelector((state) => state.account.user?.is_superuser ? 'ADMIN' : state.account.user?.role);
+    const canSee = (item) => !item.roles || item.roles.includes(role);
+    const visibleItems = menuItem.items.map((group) => ({
+        ...group,
+        children: (group.children || []).filter(canSee)
+    })).filter((group) => canSee(group) && group.children.length);
+
+    const navItems = visibleItems.map((item) => {
         switch (item.type) {
             case 'group':
                 return <NavGroup key={item.id} item={item} />;

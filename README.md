@@ -13,6 +13,14 @@ TardyTrack is a student attendance and dropout early-warning system with a plann
 - Business rules, permissions, architecture, and ERD documentation
 - Automated foundation and attendance-validation tests
 
+## Sprint 2 delivered
+
+- Administrator user-management interface and protected account APIs
+- Five-role access model with role-filtered navigation and scoped dashboard metrics
+- Temporary-password enforcement, self-service password changes, and token rotation
+- Activation/deactivation, administrator password reset, and safety protections
+- Account/login/logout audit events
+
 ## Run locally (CMD)
 
 ```cmd
@@ -46,6 +54,7 @@ The imported Berry template uses a legacy React 17 / Material UI beta dependency
 - [Sprint 1 requirements](docs/SPRINT_1_REQUIREMENTS.md)
 - [Database design and ERD](docs/DATABASE_DESIGN.md)
 - [Architecture decisions](docs/ARCHITECTURE.md)
+- [Sprint 2 accounts and permissions](docs/SPRINT_2_ACCOUNTS_AND_PERMISSIONS.md)
 
 ## Verify
 

@@ -7,7 +7,7 @@ import configData from '../../../config';
 import MainCard from '../../../ui-component/cards/MainCard';
 import { gridSpacing } from '../../../store/constant';
 
-const metricCards = [
+const fallbackMetricCards = [
     { key: 'active_students', label: 'Active Students', note: 'Enrolled student profiles', color: '#5e35b1' },
     { key: 'attendance_recorded_today', label: 'Recorded Today', note: 'Attendance entries today', color: '#1e88e5' },
     { key: 'late_today', label: 'Late Today', note: 'Needs attendance review', color: '#fb8c00' },
@@ -18,8 +18,8 @@ const metricCards = [
 
 const roadmap = [
     ['Sprint 1', 'Foundation & database design', 'Complete'],
-    ['Sprint 2', 'Accounts, roles & permissions', 'Next'],
-    ['Sprint 3', 'Student and academic records', 'Planned'],
+    ['Sprint 2', 'Accounts, roles & permissions', 'Complete'],
+    ['Sprint 3', 'Student and academic records', 'Next'],
     ['Sprint 4', 'Attendance encoding', 'Planned'],
     ['Sprint 5', 'Summaries and dashboards', 'Planned'],
     ['Sprint 6+', 'SMS, interventions, risk and reports', 'Planned']
@@ -48,6 +48,7 @@ const Dashboard = () => {
 
     const user = data?.user || account.user || {};
     const metrics = data?.metrics || {};
+    const metricCards = data?.metric_cards || fallbackMetricCards;
 
     return (
         <Grid container spacing={gridSpacing}>
@@ -69,7 +70,7 @@ const Dashboard = () => {
                     <Card sx={{ height: '100%', borderLeft: `5px solid ${metric.color}` }}>
                         <CardContent>
                             <Typography color="textSecondary" variant="subtitle2">{metric.label}</Typography>
-                            <Typography sx={{ my: 1 }} variant="h1">{metrics[metric.key] ?? '—'}</Typography>
+                            <Typography sx={{ my: 1 }} variant="h1">{metric.value ?? metrics[metric.key] ?? '—'}</Typography>
                             <Typography variant="caption">{metric.note}</Typography>
                         </CardContent>
                     </Card>

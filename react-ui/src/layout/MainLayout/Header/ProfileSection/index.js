@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { Avatar, Box, Chip, Divider, ListItemIcon, Menu, MenuItem, Typography } from '@material-ui/core';
 import { IconLogout } from '@tabler/icons';
+import { Link } from 'react-router-dom';
 
 import configData from '../../../../config';
 import { LOGOUT } from '../../../../store/actions';
@@ -44,6 +45,9 @@ const ProfileSection = () => {
                     <Typography variant="caption" color="textSecondary">{user.role_label || 'Authorized user'}</Typography>
                 </Box>
                 <Divider />
+                <MenuItem component={Link} to="/account/security" onClick={() => setAnchorEl(null)}>
+                    <Typography variant="body2">Password & security</Typography>
+                </MenuItem>
                 <MenuItem onClick={handleLogout}>
                     <ListItemIcon><IconLogout size="1.25rem" /></ListItemIcon>
                     <Typography variant="body2">Sign out</Typography>

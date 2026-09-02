@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Redirect } from 'react-router-dom';
+import { Redirect, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 import configData from '../../config';
@@ -17,6 +17,7 @@ import { ACCOUNT_INITIALIZE, LOGOUT } from '../../store/actions';
 const AuthGuard = ({ children }) => {
     const account = useSelector((state) => state.account);
     const dispatch = useDispatch();
+    const location = useLocation();
     const { isLoggedIn, token } = account;
     const [validating, setValidating] = React.useState(Boolean(isLoggedIn && token));
 
@@ -49,6 +50,14 @@ const AuthGuard = ({ children }) => {
 
     if (!isLoggedIn) {
         return <Redirect to="/login" />;
+    }
+
+    if (account.user?.must_change_password && location.pathname !== '/account/security') {
+        return <Redirect to="/account/security" />;
+    }
+
+    if (location.pathname === '/accounts/users' && account.user?.role !== 'ADMIN' && !account.user?.is_superuser) {
+        return <Redirect to="/dashboard" />;
     }
 
     return children;

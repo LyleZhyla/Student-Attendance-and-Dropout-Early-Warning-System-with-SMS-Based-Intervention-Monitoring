@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
+from students.models import Student
 
 
 class DashboardTests(TestCase):
@@ -34,6 +35,7 @@ class ApiAuthenticationTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['user']['role'], 'ADMIN')
+        self.assertIn('must_change_password', response.json()['user'])
         self.assertTrue(Token.objects.filter(user=self.user).exists())
 
     def test_dashboard_api_requires_token(self):
@@ -47,5 +49,21 @@ class ApiAuthenticationTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn('active_students', response.json()['metrics'])
+        self.assertTrue(response.json()['capabilities']['manage_users'])
+
+    def test_teacher_dashboard_does_not_expose_unassigned_students(self):
+        teacher = get_user_model().objects.create_user(
+            username='teacher-scope', password='safe-test-password', role='TEACHER'
+        )
+        Student.objects.create(
+            learner_reference_number='999999999999', first_name='Not', last_name='Assigned'
+        )
+        token = Token.objects.create(user=teacher)
+        response = self.client.get(
+            reverse('api-dashboard-summary'), HTTP_AUTHORIZATION=f'Token {token.key}'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['metrics']['active_students'], 0)
+        self.assertFalse(response.json()['capabilities']['manage_users'])
 
 # Create your tests here.

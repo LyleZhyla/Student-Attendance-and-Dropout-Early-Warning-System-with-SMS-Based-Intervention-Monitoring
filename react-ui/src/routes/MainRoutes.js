@@ -9,6 +9,8 @@ import AuthGuard from './../utils/route-guard/AuthGuard';
 // dashboard routing
 const DashboardDefault = Loadable(lazy(() => import('../views/dashboard/Default')));
 const ModuleStatus = Loadable(lazy(() => import('../views/module-status')));
+const UserManagement = Loadable(lazy(() => import('../views/accounts/UserManagement')));
+const AccountSecurity = Loadable(lazy(() => import('../views/accounts/AccountSecurity')));
 
 //-----------------------|| MAIN ROUTING ||-----------------------//
 
@@ -19,7 +21,9 @@ const MainRoutes = () => {
         <Route
             path={[
                 '/dashboard',
-                '/module/:moduleKey'
+                '/module/:moduleKey',
+                '/accounts/users',
+                '/account/security'
             ]}
         >
             <MainLayout>
@@ -27,6 +31,8 @@ const MainRoutes = () => {
                     <AuthGuard>
                         <Route exact path="/dashboard" component={DashboardDefault} />
                         <Route exact path="/module/:moduleKey" component={ModuleStatus} />
+                        <Route exact path="/accounts/users" component={UserManagement} />
+                        <Route exact path="/account/security" component={AccountSecurity} />
                     </AuthGuard>
                 </Switch>
             </MainLayout>

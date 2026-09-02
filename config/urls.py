@@ -20,6 +20,13 @@ from django.urls import path
 
 from core.views import dashboard
 from core.api import dashboard_summary, login_api, logout_api, me_api
+from accounts.api import (
+    admin_reset_password_api,
+    change_password_api,
+    user_detail_api,
+    user_status_api,
+    users_api,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -30,4 +37,9 @@ urlpatterns = [
     path('api/auth/logout/', logout_api, name='api-logout'),
     path('api/auth/me/', me_api, name='api-me'),
     path('api/dashboard/summary/', dashboard_summary, name='api-dashboard-summary'),
+    path('api/accounts/users/', users_api, name='api-users'),
+    path('api/accounts/users/<int:user_id>/', user_detail_api, name='api-user-detail'),
+    path('api/accounts/users/<int:user_id>/status/', user_status_api, name='api-user-status'),
+    path('api/accounts/users/<int:user_id>/reset-password/', admin_reset_password_api, name='api-admin-reset-password'),
+    path('api/account/change-password/', change_password_api, name='api-change-password'),
 ]

@@ -11,6 +11,7 @@ from interventions.models import InterventionCase
 from notifications.models import SMSLog
 from risk_assessment.models import RiskAssessment
 from students.models import Student
+from audit_logs.models import AuditLog
 
 
 def user_payload(user):
@@ -23,6 +24,10 @@ def user_payload(user):
         'full_name': user.get_full_name() or user.username,
         'role': user.role,
         'role_label': user.get_role_display(),
+        'is_active': user.is_active,
+        'must_change_password': user.must_change_password,
+        'is_superuser': user.is_superuser,
+        'last_login': user.last_login,
     }
 
 
@@ -43,11 +48,21 @@ def login_api(request):
         return Response({'success': False, 'message': 'Invalid username/email or password.'}, status=400)
 
     token, _ = Token.objects.get_or_create(user=user)
+    AuditLog.objects.create(
+        actor=user, action='LOGIN', object_type='accounts.User', object_id=str(user.pk),
+        summary=f'Account {user.username} signed in.',
+        ip_address=request.META.get('REMOTE_ADDR'),
+    )
     return Response({'success': True, 'token': token.key, 'user': user_payload(user)})
 
 
 @api_view(['POST'])
 def logout_api(request):
+    AuditLog.objects.create(
+        actor=request.user, action='LOGOUT', object_type='accounts.User', object_id=str(request.user.pk),
+        summary=f'Account {request.user.username} signed out.',
+        ip_address=request.META.get('REMOTE_ADDR'),
+    )
     if request.auth:
         request.auth.delete()
     return Response({'success': True})
@@ -61,7 +76,41 @@ def me_api(request):
 @api_view(['GET'])
 def dashboard_summary(request):
     today = timezone.localdate()
-    today_attendance = AttendanceRecord.objects.filter(date=today)
+    user = request.user
+    students = Student.objects.filter(is_active=True)
+    attendance = AttendanceRecord.objects.all()
+    risk_assessments = RiskAssessment.objects.all()
+    interventions = InterventionCase.objects.all()
+    sms_logs = SMSLog.objects.all()
+
+    if user.role == user.Role.TEACHER:
+        students = students.filter(enrollments__section__schedules__teacher=user).distinct()
+        attendance = attendance.filter(class_schedule__teacher=user)
+        risk_assessments = risk_assessments.filter(student__in=students)
+        interventions = interventions.filter(student__in=students)
+        sms_logs = sms_logs.filter(student__in=students)
+    elif user.role == user.Role.STUDENT:
+        profile = getattr(user, 'student_profile', None)
+        students = students.filter(pk=profile.pk) if profile else students.none()
+        attendance = attendance.filter(student__in=students)
+        risk_assessments = risk_assessments.filter(student__in=students, reviewed_by__isnull=False)
+        interventions = interventions.filter(student__in=students)
+        sms_logs = sms_logs.filter(student__in=students)
+    elif user.role == user.Role.PARENT:
+        guardian = getattr(user, 'guardian_profile', None)
+        students = students.filter(guardians=guardian).distinct() if guardian else students.none()
+        attendance = attendance.filter(student__in=students)
+        risk_assessments = risk_assessments.filter(student__in=students, reviewed_by__isnull=False)
+        interventions = interventions.filter(student__in=students)
+        sms_logs = sms_logs.filter(guardian=guardian) if guardian else sms_logs.none()
+    elif user.role not in (user.Role.ADMIN, user.Role.GUIDANCE) and not user.is_superuser:
+        students = students.none()
+        attendance = attendance.none()
+        risk_assessments = risk_assessments.none()
+        interventions = interventions.none()
+        sms_logs = sms_logs.none()
+
+    today_attendance = attendance.filter(date=today)
     open_intervention_statuses = [
         InterventionCase.Status.FOR_REVIEW,
         InterventionCase.Status.CONTACTING_PARENT,
@@ -74,21 +123,79 @@ def dashboard_summary(request):
         row['status']: row['total']
         for row in today_attendance.values('status').annotate(total=Count('id'))
     }
+    metrics = {
+        'active_students': students.count(),
+        'attendance_recorded_today': today_attendance.count(),
+        'present_today': attendance_by_status.get(AttendanceRecord.Status.PRESENT, 0),
+        'late_today': attendance_by_status.get(AttendanceRecord.Status.LATE, 0),
+        'absent_today': (
+            attendance_by_status.get(AttendanceRecord.Status.ABSENT_EXCUSED, 0)
+            + attendance_by_status.get(AttendanceRecord.Status.ABSENT_UNEXCUSED, 0)
+        ),
+        'high_risk_records': risk_assessments.filter(level=RiskAssessment.Level.HIGH).count(),
+        'open_interventions': interventions.filter(status__in=open_intervention_statuses).count(),
+        'sms_sent': sms_logs.filter(status__in=[SMSLog.Status.SENT, SMSLog.Status.DELIVERED]).count(),
+        'active_accounts': get_user_model().objects.filter(is_active=True).count()
+        if user.role == user.Role.ADMIN or user.is_superuser else None,
+    }
+    cards_by_role = {
+        user.Role.ADMIN: [
+            ('active_accounts', 'Active Accounts', 'Users allowed to sign in', '#5e35b1'),
+            ('active_students', 'Active Students', 'Student profiles under monitoring', '#3949ab'),
+            ('attendance_recorded_today', 'Recorded Today', 'Attendance entries today', '#1e88e5'),
+            ('high_risk_records', 'High-Risk Records', 'Requires human validation', '#d81b60'),
+            ('open_interventions', 'Open Interventions', 'Active support cases', '#00897b'),
+            ('sms_sent', 'SMS Sent', 'Sent or delivered messages', '#6d4c41'),
+        ],
+        user.Role.TEACHER: [
+            ('active_students', 'Assigned Students', 'Students in your scheduled classes', '#5e35b1'),
+            ('attendance_recorded_today', 'Recorded Today', 'Your class attendance entries', '#1e88e5'),
+            ('late_today', 'Late Today', 'Assigned students marked late', '#fb8c00'),
+            ('absent_today', 'Absent Today', 'Assigned students marked absent', '#e53935'),
+            ('high_risk_records', 'High-Risk Records', 'Assigned students requiring review', '#d81b60'),
+            ('open_interventions', 'Open Interventions', 'Support cases for assigned students', '#00897b'),
+        ],
+        user.Role.STUDENT: [
+            ('attendance_recorded_today', 'Recorded Today', 'Your attendance entries today', '#1e88e5'),
+            ('present_today', 'Present Today', 'Classes marked present', '#43a047'),
+            ('late_today', 'Late Today', 'Classes marked late', '#fb8c00'),
+            ('absent_today', 'Absent Today', 'Excused and unexcused records', '#e53935'),
+            ('high_risk_records', 'Support Indicators', 'Your reviewed high-priority records', '#d81b60'),
+            ('open_interventions', 'Support Cases', 'Your active intervention cases', '#00897b'),
+        ],
+        user.Role.PARENT: [
+            ('active_students', 'Linked Children', 'Students linked to your account', '#5e35b1'),
+            ('attendance_recorded_today', 'Recorded Today', 'Linked attendance entries today', '#1e88e5'),
+            ('late_today', 'Late Today', 'Linked students marked late', '#fb8c00'),
+            ('absent_today', 'Absent Today', 'Linked students marked absent', '#e53935'),
+            ('open_interventions', 'Support Cases', 'Active cases involving linked students', '#00897b'),
+            ('sms_sent', 'SMS Sent', 'Notifications recorded for linked students', '#6d4c41'),
+        ],
+        user.Role.GUIDANCE: [
+            ('active_students', 'Students Monitored', 'Active student population', '#5e35b1'),
+            ('high_risk_records', 'High-Risk Records', 'Requires guidance review', '#d81b60'),
+            ('open_interventions', 'Open Interventions', 'Active support cases', '#00897b'),
+            ('attendance_recorded_today', 'Recorded Today', 'Attendance entries today', '#1e88e5'),
+            ('late_today', 'Late Today', 'Students marked late', '#fb8c00'),
+            ('absent_today', 'Absent Today', 'Students marked absent', '#e53935'),
+        ],
+    }
+    card_definitions = cards_by_role[user.Role.ADMIN] if user.is_superuser else cards_by_role.get(
+        user.role, cards_by_role[user.Role.STUDENT]
+    )
+
     return Response({
         'success': True,
         'as_of': today,
         'user': user_payload(request.user),
-        'metrics': {
-            'active_students': Student.objects.filter(is_active=True).count(),
-            'attendance_recorded_today': today_attendance.count(),
-            'present_today': attendance_by_status.get(AttendanceRecord.Status.PRESENT, 0),
-            'late_today': attendance_by_status.get(AttendanceRecord.Status.LATE, 0),
-            'absent_today': (
-                attendance_by_status.get(AttendanceRecord.Status.ABSENT_EXCUSED, 0)
-                + attendance_by_status.get(AttendanceRecord.Status.ABSENT_UNEXCUSED, 0)
-            ),
-            'high_risk_records': RiskAssessment.objects.filter(level=RiskAssessment.Level.HIGH).count(),
-            'open_interventions': InterventionCase.objects.filter(status__in=open_intervention_statuses).count(),
-            'sms_sent': SMSLog.objects.filter(status__in=[SMSLog.Status.SENT, SMSLog.Status.DELIVERED]).count(),
+        'metrics': metrics,
+        'metric_cards': [
+            {'key': key, 'label': label, 'note': note, 'color': color, 'value': metrics[key]}
+            for key, label, note, color in card_definitions
+        ],
+        'capabilities': {
+            'manage_users': user.role == user.Role.ADMIN or user.is_superuser,
+            'encode_attendance': user.role in (user.Role.ADMIN, user.Role.TEACHER),
+            'review_sensitive_risk': user.role in (user.Role.ADMIN, user.Role.GUIDANCE),
         },
     })
