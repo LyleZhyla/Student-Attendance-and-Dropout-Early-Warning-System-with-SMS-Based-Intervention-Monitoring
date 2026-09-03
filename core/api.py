@@ -95,14 +95,18 @@ def dashboard_summary(request):
         profile = getattr(user, 'student_profile', None)
         students = students.filter(pk=profile.pk) if profile else students.none()
         attendance = attendance.filter(student__in=students)
-        risk_assessments = risk_assessments.filter(student__in=students, reviewed_by__isnull=False)
+        risk_assessments = risk_assessments.filter(
+            student__in=students, review_decision=RiskAssessment.ReviewDecision.CONFIRMED
+        )
         interventions = interventions.filter(student__in=students)
         sms_logs = sms_logs.filter(student__in=students)
     elif user.role == user.Role.PARENT:
         guardian = getattr(user, 'guardian_profile', None)
         students = students.filter(guardians=guardian).distinct() if guardian else students.none()
         attendance = attendance.filter(student__in=students)
-        risk_assessments = risk_assessments.filter(student__in=students, reviewed_by__isnull=False)
+        risk_assessments = risk_assessments.filter(
+            student__in=students, review_decision=RiskAssessment.ReviewDecision.CONFIRMED
+        )
         interventions = interventions.filter(student__in=students)
         sms_logs = sms_logs.filter(guardian=guardian) if guardian else sms_logs.none()
     elif user.role not in (user.Role.ADMIN, user.Role.GUIDANCE) and not user.is_superuser:
@@ -169,7 +173,13 @@ def dashboard_summary(request):
         ),
         'month_attendance_rate': round(month_attended * 100 / month_recorded, 1) if month_recorded else 0,
         'month_absences': month_absences,
-        'high_risk_records': risk_assessments.filter(level=RiskAssessment.Level.HIGH).count(),
+        'high_risk_records': risk_assessments.filter(
+            level=RiskAssessment.Level.HIGH,
+            review_decision=RiskAssessment.ReviewDecision.CONFIRMED,
+        ).count(),
+        'pending_risk_reviews': risk_assessments.filter(
+            review_decision=RiskAssessment.ReviewDecision.PENDING
+        ).count(),
         'open_interventions': interventions.filter(status__in=open_intervention_statuses).count(),
         'sms_sent': sms_logs.filter(status__in=[SMSLog.Status.SENT, SMSLog.Status.DELIVERED]).count(),
         'active_accounts': get_user_model().objects.filter(is_active=True).count()
@@ -180,7 +190,8 @@ def dashboard_summary(request):
             ('active_accounts', 'Active Accounts', 'Users allowed to sign in', '#5e35b1'),
             ('active_students', 'Active Students', 'Student profiles under monitoring', '#3949ab'),
             ('month_attendance_rate', 'Monthly Attendance', 'Recorded attendance rate this month', '#1e88e5'),
-            ('high_risk_records', 'High-Risk Records', 'Requires human validation', '#d81b60'),
+            ('high_risk_records', 'Confirmed High Priority', 'Human-reviewed support indicators', '#d81b60'),
+            ('pending_risk_reviews', 'Pending Risk Reviews', 'Draft scores awaiting validation', '#8e24aa'),
             ('open_interventions', 'Open Interventions', 'Active support cases', '#00897b'),
             ('sms_sent', 'SMS Sent', 'Sent or delivered messages', '#6d4c41'),
         ],
@@ -189,7 +200,7 @@ def dashboard_summary(request):
             ('month_attendance_rate', 'Monthly Attendance', 'Assigned-class attendance rate', '#1e88e5'),
             ('late_today', 'Late Today', 'Assigned students marked late', '#fb8c00'),
             ('absent_today', 'Absent Today', 'Assigned students marked absent', '#e53935'),
-            ('high_risk_records', 'High-Risk Records', 'Assigned students requiring review', '#d81b60'),
+            ('high_risk_records', 'Confirmed High Priority', 'Reviewed indicators for assigned students', '#d81b60'),
             ('open_interventions', 'Open Interventions', 'Support cases for assigned students', '#00897b'),
         ],
         user.Role.STUDENT: [
@@ -210,7 +221,8 @@ def dashboard_summary(request):
         ],
         user.Role.GUIDANCE: [
             ('active_students', 'Students Monitored', 'Active student population', '#5e35b1'),
-            ('high_risk_records', 'High-Risk Records', 'Requires guidance review', '#d81b60'),
+            ('high_risk_records', 'Confirmed High Priority', 'Human-reviewed support indicators', '#d81b60'),
+            ('pending_risk_reviews', 'Pending Risk Reviews', 'Draft scores awaiting validation', '#8e24aa'),
             ('open_interventions', 'Open Interventions', 'Active support cases', '#00897b'),
             ('month_attendance_rate', 'Monthly Attendance', 'Recorded student attendance rate', '#1e88e5'),
             ('late_today', 'Late Today', 'Students marked late', '#fb8c00'),
