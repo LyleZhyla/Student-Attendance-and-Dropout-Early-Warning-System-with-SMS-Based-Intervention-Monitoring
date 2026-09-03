@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -123,6 +125,39 @@ def dashboard_summary(request):
         row['status']: row['total']
         for row in today_attendance.values('status').annotate(total=Count('id'))
     }
+    month_attendance = attendance.filter(date__range=(today.replace(day=1), today))
+    month_by_status = {
+        row['status']: row['total']
+        for row in month_attendance.values('status').annotate(total=Count('id'))
+    }
+    month_recorded = month_attendance.exclude(status=AttendanceRecord.Status.NOT_RECORDED).count()
+    month_attended = sum(month_by_status.get(status, 0) for status in (
+        AttendanceRecord.Status.PRESENT,
+        AttendanceRecord.Status.LATE,
+        AttendanceRecord.Status.SCHOOL_ACTIVITY,
+    ))
+    month_absences = sum(month_by_status.get(status, 0) for status in (
+        AttendanceRecord.Status.ABSENT_EXCUSED,
+        AttendanceRecord.Status.ABSENT_UNEXCUSED,
+    ))
+    seven_day_start = today - timedelta(days=6)
+    daily_rows = attendance.filter(date__range=(seven_day_start, today)).values('date', 'status').annotate(total=Count('id'))
+    daily_lookup = {}
+    for row in daily_rows:
+        daily_lookup.setdefault(row['date'], {})[row['status']] = row['total']
+    seven_day_trend = []
+    for offset in range(7):
+        day = seven_day_start + timedelta(days=offset)
+        counts = daily_lookup.get(day, {})
+        seven_day_trend.append({
+            'date': day,
+            'label': day.strftime('%a'),
+            'present': counts.get(AttendanceRecord.Status.PRESENT, 0),
+            'late': counts.get(AttendanceRecord.Status.LATE, 0),
+            'absent': counts.get(AttendanceRecord.Status.ABSENT_EXCUSED, 0)
+            + counts.get(AttendanceRecord.Status.ABSENT_UNEXCUSED, 0),
+            'school_activity': counts.get(AttendanceRecord.Status.SCHOOL_ACTIVITY, 0),
+        })
     metrics = {
         'active_students': students.count(),
         'attendance_recorded_today': today_attendance.count(),
@@ -132,6 +167,8 @@ def dashboard_summary(request):
             attendance_by_status.get(AttendanceRecord.Status.ABSENT_EXCUSED, 0)
             + attendance_by_status.get(AttendanceRecord.Status.ABSENT_UNEXCUSED, 0)
         ),
+        'month_attendance_rate': round(month_attended * 100 / month_recorded, 1) if month_recorded else 0,
+        'month_absences': month_absences,
         'high_risk_records': risk_assessments.filter(level=RiskAssessment.Level.HIGH).count(),
         'open_interventions': interventions.filter(status__in=open_intervention_statuses).count(),
         'sms_sent': sms_logs.filter(status__in=[SMSLog.Status.SENT, SMSLog.Status.DELIVERED]).count(),
@@ -142,21 +179,21 @@ def dashboard_summary(request):
         user.Role.ADMIN: [
             ('active_accounts', 'Active Accounts', 'Users allowed to sign in', '#5e35b1'),
             ('active_students', 'Active Students', 'Student profiles under monitoring', '#3949ab'),
-            ('attendance_recorded_today', 'Recorded Today', 'Attendance entries today', '#1e88e5'),
+            ('month_attendance_rate', 'Monthly Attendance', 'Recorded attendance rate this month', '#1e88e5'),
             ('high_risk_records', 'High-Risk Records', 'Requires human validation', '#d81b60'),
             ('open_interventions', 'Open Interventions', 'Active support cases', '#00897b'),
             ('sms_sent', 'SMS Sent', 'Sent or delivered messages', '#6d4c41'),
         ],
         user.Role.TEACHER: [
             ('active_students', 'Assigned Students', 'Students in your scheduled classes', '#5e35b1'),
-            ('attendance_recorded_today', 'Recorded Today', 'Your class attendance entries', '#1e88e5'),
+            ('month_attendance_rate', 'Monthly Attendance', 'Assigned-class attendance rate', '#1e88e5'),
             ('late_today', 'Late Today', 'Assigned students marked late', '#fb8c00'),
             ('absent_today', 'Absent Today', 'Assigned students marked absent', '#e53935'),
             ('high_risk_records', 'High-Risk Records', 'Assigned students requiring review', '#d81b60'),
             ('open_interventions', 'Open Interventions', 'Support cases for assigned students', '#00897b'),
         ],
         user.Role.STUDENT: [
-            ('attendance_recorded_today', 'Recorded Today', 'Your attendance entries today', '#1e88e5'),
+            ('month_attendance_rate', 'Monthly Attendance', 'Your recorded attendance rate', '#1e88e5'),
             ('present_today', 'Present Today', 'Classes marked present', '#43a047'),
             ('late_today', 'Late Today', 'Classes marked late', '#fb8c00'),
             ('absent_today', 'Absent Today', 'Excused and unexcused records', '#e53935'),
@@ -165,7 +202,7 @@ def dashboard_summary(request):
         ],
         user.Role.PARENT: [
             ('active_students', 'Linked Children', 'Students linked to your account', '#5e35b1'),
-            ('attendance_recorded_today', 'Recorded Today', 'Linked attendance entries today', '#1e88e5'),
+            ('month_attendance_rate', 'Monthly Attendance', 'Linked students’ attendance rate', '#1e88e5'),
             ('late_today', 'Late Today', 'Linked students marked late', '#fb8c00'),
             ('absent_today', 'Absent Today', 'Linked students marked absent', '#e53935'),
             ('open_interventions', 'Support Cases', 'Active cases involving linked students', '#00897b'),
@@ -175,7 +212,7 @@ def dashboard_summary(request):
             ('active_students', 'Students Monitored', 'Active student population', '#5e35b1'),
             ('high_risk_records', 'High-Risk Records', 'Requires guidance review', '#d81b60'),
             ('open_interventions', 'Open Interventions', 'Active support cases', '#00897b'),
-            ('attendance_recorded_today', 'Recorded Today', 'Attendance entries today', '#1e88e5'),
+            ('month_attendance_rate', 'Monthly Attendance', 'Recorded student attendance rate', '#1e88e5'),
             ('late_today', 'Late Today', 'Students marked late', '#fb8c00'),
             ('absent_today', 'Absent Today', 'Students marked absent', '#e53935'),
         ],
@@ -190,9 +227,21 @@ def dashboard_summary(request):
         'user': user_payload(request.user),
         'metrics': metrics,
         'metric_cards': [
-            {'key': key, 'label': label, 'note': note, 'color': color, 'value': metrics[key]}
+            {
+                'key': key, 'label': label, 'note': note, 'color': color, 'value': metrics[key],
+                'format': 'percent' if key.endswith('_rate') else 'number',
+            }
             for key, label, note, color in card_definitions
         ],
+        'attendance_overview': {
+            'month': today.strftime('%Y-%m'),
+            'month_label': today.strftime('%B %Y'),
+            'recorded': month_recorded,
+            'attended': month_attended,
+            'absences': month_absences,
+            'attendance_rate': metrics['month_attendance_rate'],
+            'seven_day_trend': seven_day_trend,
+        },
         'capabilities': {
             'manage_users': user.role == user.Role.ADMIN or user.is_superuser,
             'encode_attendance': user.role in (user.Role.ADMIN, user.Role.TEACHER),

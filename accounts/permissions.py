@@ -24,3 +24,22 @@ class IsAttendanceEncoder(BasePermission):
                 or request.user.role in (request.user.Role.ADMIN, request.user.Role.TEACHER)
             )
         )
+
+
+class IsAttendanceViewer(BasePermission):
+    message = 'Attendance monitoring is available to administrators, teachers, students, and linked guardians.'
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and (
+                request.user.is_superuser
+                or request.user.role in (
+                    request.user.Role.ADMIN,
+                    request.user.Role.TEACHER,
+                    request.user.Role.STUDENT,
+                    request.user.Role.PARENT,
+                )
+            )
+        )

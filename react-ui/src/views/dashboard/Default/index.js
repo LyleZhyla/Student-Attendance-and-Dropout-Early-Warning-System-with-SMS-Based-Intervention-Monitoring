@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
+import Chart from 'react-apexcharts';
 import { Box, Card, CardContent, Chip, CircularProgress, Grid, LinearProgress, Typography } from '@material-ui/core';
 
 import configData from '../../../config';
@@ -21,7 +22,7 @@ const roadmap = [
     ['Sprint 2', 'Accounts, roles & permissions', 'Complete'],
     ['Sprint 3', 'Student and academic records', 'Complete'],
     ['Sprint 4', 'Attendance encoding', 'Complete'],
-    ['Sprint 5', 'Summaries and dashboards', 'Planned'],
+    ['Sprint 5', 'Summaries and dashboards', 'Complete'],
     ['Sprint 6+', 'SMS, interventions, risk and reports', 'Planned']
 ];
 
@@ -49,6 +50,13 @@ const Dashboard = () => {
     const user = data?.user || account.user || {};
     const metrics = data?.metrics || {};
     const metricCards = data?.metric_cards || fallbackMetricCards;
+    const attendanceOverview = data?.attendance_overview || { seven_day_trend: [] };
+    const attendanceChartOptions = {
+        chart: { stacked: true, toolbar: { show: false } },
+        xaxis: { categories: attendanceOverview.seven_day_trend.map((item) => item.label) },
+        colors: ['#43a047', '#fb8c00', '#e53935'], legend: { position: 'top' },
+        dataLabels: { enabled: false }, yaxis: { min: 0, forceNiceScale: true }
+    };
 
     return (
         <Grid container spacing={gridSpacing}>
@@ -70,7 +78,7 @@ const Dashboard = () => {
                     <Card sx={{ height: '100%', borderLeft: `5px solid ${metric.color}` }}>
                         <CardContent>
                             <Typography color="textSecondary" variant="subtitle2">{metric.label}</Typography>
-                            <Typography sx={{ my: 1 }} variant="h1">{metric.value ?? metrics[metric.key] ?? '—'}</Typography>
+                            <Typography sx={{ my: 1 }} variant="h1">{metric.value ?? metrics[metric.key] ?? '—'}{metric.format === 'percent' ? '%' : ''}</Typography>
                             <Typography variant="caption">{metric.note}</Typography>
                         </CardContent>
                     </Card>
@@ -95,6 +103,25 @@ const Dashboard = () => {
                     </Grid>
                     <LinearProgress sx={{ mt: 4, height: 8, borderRadius: 4 }} variant="determinate" value={metrics.attendance_recorded_today ? 100 : 0} />
                     <Typography sx={{ mt: 1 }} variant="caption" color="textSecondary">Data as of {data?.as_of || 'today'}</Typography>
+                </MainCard>
+            </Grid>
+
+            <Grid item xs={12}>
+                <MainCard title={`Attendance overview · ${attendanceOverview.month_label || 'Current month'}`}>
+                    <Grid container spacing={3}>
+                        <Grid item md={3} xs={12}>
+                            <Typography variant="h1">{attendanceOverview.attendance_rate || 0}%</Typography>
+                            <Typography color="textSecondary">Monthly attendance rate</Typography>
+                            <Typography sx={{ mt: 2 }} variant="body2">{attendanceOverview.attended || 0} attended · {attendanceOverview.absences || 0} absent · {attendanceOverview.recorded || 0} recorded</Typography>
+                        </Grid>
+                        <Grid item md={9} xs={12}>
+                            <Chart type="bar" height={240} options={attendanceChartOptions} series={[
+                                { name: 'Present', data: attendanceOverview.seven_day_trend.map((item) => item.present) },
+                                { name: 'Late', data: attendanceOverview.seven_day_trend.map((item) => item.late) },
+                                { name: 'Absent', data: attendanceOverview.seven_day_trend.map((item) => item.absent) }
+                            ]} />
+                        </Grid>
+                    </Grid>
                 </MainCard>
             </Grid>
 

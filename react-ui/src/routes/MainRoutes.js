@@ -14,6 +14,7 @@ const AccountSecurity = Loadable(lazy(() => import('../views/accounts/AccountSec
 const AcademicManagement = Loadable(lazy(() => import('../views/academics/AcademicManagement')));
 const StudentManagement = Loadable(lazy(() => import('../views/students/StudentManagement')));
 const AttendanceManagement = Loadable(lazy(() => import('../views/attendance/AttendanceManagement')));
+const AttendanceAnalytics = Loadable(lazy(() => import('../views/attendance/AttendanceAnalytics')));
 
 //-----------------------|| MAIN ROUTING ||-----------------------//
 
@@ -29,7 +30,8 @@ const MainRoutes = () => {
                 '/account/security',
                 '/academics',
                 '/students',
-                '/attendance'
+                '/attendance',
+                '/attendance/analytics'
             ]}
         >
             <MainLayout>
@@ -42,6 +44,7 @@ const MainRoutes = () => {
                         <Route exact path="/academics" component={AcademicManagement} />
                         <Route exact path="/students" component={StudentManagement} />
                         <Route exact path="/attendance" component={AttendanceManagement} />
+                        <Route exact path="/attendance/analytics" component={AttendanceAnalytics} />
                     </AuthGuard>
                 </Switch>
             </MainLayout>

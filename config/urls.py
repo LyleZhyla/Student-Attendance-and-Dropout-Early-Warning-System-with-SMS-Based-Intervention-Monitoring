@@ -34,7 +34,10 @@ from students.api import (
     enrollment_detail_api, enrollments_api, guardian_detail_api, guardian_link_detail_api, guardian_links_api,
     guardians_api, student_detail_api, student_options_api, students_api,
 )
-from attendance.api import attendance_bulk_api, attendance_options_api, attendance_records_api, attendance_roster_api
+from attendance.api import (
+    attendance_analytics_api, attendance_bulk_api, attendance_options_api, attendance_records_api,
+    attendance_roster_api,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -71,6 +74,7 @@ urlpatterns = [
     path('api/attendance/roster/', attendance_roster_api, name='api-attendance-roster'),
     path('api/attendance/bulk/', attendance_bulk_api, name='api-attendance-bulk'),
     path('api/attendance/records/', attendance_records_api, name='api-attendance-records'),
+    path('api/attendance/analytics/', attendance_analytics_api, name='api-attendance-analytics'),
     path('favicon.svg', react_asset, {'filename': 'favicon.svg'}, name='react-favicon'),
     path('asset-manifest.json', react_asset, {'filename': 'asset-manifest.json'}, name='react-asset-manifest'),
     re_path(r'^(?!api/|admin/).*$', react_app, name='react-app'),

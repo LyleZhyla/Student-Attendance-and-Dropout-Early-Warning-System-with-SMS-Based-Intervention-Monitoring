@@ -127,6 +127,16 @@ class AttendanceApiTests(TestCase):
             'records': [{'student': self.student.pk, 'status': status, 'time_in': '09:00', 'excuse_reason': ''}],
         }
 
+    def create_record(self, student, record_date, status, schedule=None):
+        return AttendanceRecord.objects.create(
+            student=student, class_schedule=schedule or self.schedule, date=record_date,
+            status=status, encoded_by=(schedule or self.schedule).teacher,
+        )
+
+    def previous_month(self):
+        first = self.today.replace(day=1)
+        return (first - timedelta(days=1)).replace(day=1)
+
     def test_teacher_only_sees_and_encodes_assigned_schedules(self):
         auth = self.auth(self.teacher)
         options = self.client.get(reverse('api-attendance-options'), **auth)
@@ -192,5 +202,59 @@ class AttendanceApiTests(TestCase):
         parent_response = self.client.get(reverse('api-attendance-records'), **self.auth(self.parent_user))
         self.assertEqual([item['student'] for item in student_response.json()['records']], [self.student.pk])
         self.assertEqual([item['student'] for item in parent_response.json()['records']], [self.student.pk])
+
+    def test_monthly_analytics_calculates_rates_and_six_month_trend(self):
+        month = self.previous_month()
+        self.create_record(self.student, month, AttendanceRecord.Status.PRESENT)
+        self.create_record(self.student, month + timedelta(days=1), AttendanceRecord.Status.LATE)
+        self.create_record(self.student, month + timedelta(days=2), AttendanceRecord.Status.ABSENT_UNEXCUSED)
+        response = self.client.get(
+            reverse('api-attendance-analytics'), {'month': month.strftime('%Y-%m')}, **self.auth(self.teacher)
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload['summary']['recorded'], 3)
+        self.assertEqual(payload['summary']['attendance_rate'], 66.7)
+        self.assertEqual(payload['summary']['absence_rate'], 33.3)
+        self.assertEqual(len(payload['monthly_trend']), 6)
+        self.assertEqual(len(payload['daily_trend']), 3)
+        self.assertEqual(payload['student_breakdown'][0]['monitoring_events'], 2)
+
+    def test_school_activity_counts_as_attended_and_not_as_absent(self):
+        month = self.previous_month()
+        self.create_record(self.student, month, AttendanceRecord.Status.SCHOOL_ACTIVITY)
+        response = self.client.get(
+            reverse('api-attendance-analytics'), {'month': month.strftime('%Y-%m')}, **self.auth(self.student_user)
+        )
+        summary = response.json()['summary']
+        self.assertEqual(summary['attendance_rate'], 100.0)
+        self.assertEqual(summary['absences'], 0)
+
+    def test_parent_analytics_only_contains_linked_children(self):
+        month = self.previous_month()
+        self.create_record(self.student, month, AttendanceRecord.Status.PRESENT)
+        self.create_record(self.outsider, month, AttendanceRecord.Status.ABSENT_UNEXCUSED)
+        response = self.client.get(
+            reverse('api-attendance-analytics'), {'month': month.strftime('%Y-%m')}, **self.auth(self.parent_user)
+        )
+        payload = response.json()
+        self.assertEqual(payload['summary']['total'], 1)
+        self.assertEqual([item['student'] for item in payload['student_breakdown']], [self.student.pk])
+        self.assertEqual([item['id'] for item in payload['filter_options']['students']], [self.student.pk])
+
+    def test_teacher_cannot_filter_analytics_by_another_schedule(self):
+        response = self.client.get(
+            reverse('api-attendance-analytics'),
+            {'month': self.today.strftime('%Y-%m'), 'schedule': self.other_schedule.pk},
+            **self.auth(self.teacher),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_future_analytics_month_is_rejected(self):
+        future = (self.today.replace(day=28) + timedelta(days=5)).replace(day=1)
+        response = self.client.get(
+            reverse('api-attendance-analytics'), {'month': future.strftime('%Y-%m')}, **self.auth(self.admin)
+        )
+        self.assertEqual(response.status_code, 400)
 
 # Create your tests here.

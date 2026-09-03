@@ -53,6 +53,8 @@ class ApiAuthenticationTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn('active_students', response.json()['metrics'])
+        self.assertIn('month_attendance_rate', response.json()['metrics'])
+        self.assertEqual(len(response.json()['attendance_overview']['seven_day_trend']), 7)
         self.assertTrue(response.json()['capabilities']['manage_users'])
 
     def test_teacher_dashboard_does_not_expose_unassigned_students(self):
