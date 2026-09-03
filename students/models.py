@@ -11,6 +11,10 @@ class Guardian(models.Model):
     email = models.EmailField(blank=True)
     address = models.TextField(blank=True)
     sms_consent = models.BooleanField(default=False)
+    mobile_verified = models.BooleanField(
+        default=False,
+        help_text='Confirms that the guardian controls this mobile number.',
+    )
 
     def __str__(self):
         return self.full_name

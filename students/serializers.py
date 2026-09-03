@@ -52,13 +52,22 @@ class GuardianSerializer(ValidatedModelSerializer):
         model = Guardian
         fields = (
             'id', 'full_name', 'relationship', 'mobile_number', 'email', 'address',
-            'sms_consent', 'user', 'account_name', 'student_count',
+            'sms_consent', 'mobile_verified', 'user', 'account_name', 'student_count',
         )
 
     def validate_user(self, user):
         if user and (user.role != User.Role.PARENT or not user.is_active):
             raise serializers.ValidationError('Choose an active Parent/Guardian account.')
         return user
+
+    def update(self, instance, validated_data):
+        if (
+            'mobile_number' in validated_data
+            and validated_data['mobile_number'] != instance.mobile_number
+            and 'mobile_verified' not in validated_data
+        ):
+            validated_data['mobile_verified'] = False
+        return super().update(instance, validated_data)
 
 
 class EnrollmentSerializer(ValidatedModelSerializer):

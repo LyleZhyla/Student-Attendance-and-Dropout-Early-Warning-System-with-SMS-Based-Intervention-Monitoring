@@ -146,3 +146,9 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# The local provider records a simulated acceptance and never contacts a real recipient.
+# Configure a production provider class before enabling automated notifications.
+SMS_PROVIDER_CLASS = os.environ.get('SMS_PROVIDER_CLASS', 'notifications.providers.ConsoleSMSProvider')
+SMS_MAX_RETRIES = int(os.environ.get('SMS_MAX_RETRIES', '3'))
+SMS_AUTO_ATTENDANCE_NOTIFICATIONS = os.environ.get('SMS_AUTO_ATTENDANCE_NOTIFICATIONS', 'False').lower() == 'true'

@@ -9,7 +9,7 @@ const modules = {
     attendance: { title: 'Attendance', sprint: 'Sprint 4–5', detail: 'Bulk attendance encoding, correction controls, monthly summaries, trends, and role-specific monitoring.' },
     risk: { title: 'Risk Assessment', sprint: 'Sprint 8–9', detail: 'Explainable early-warning indicators, restricted well-being assessment, and required human review.' },
     interventions: { title: 'Interventions & Home Visits', sprint: 'Sprint 7', detail: 'Case ownership, parent contact attempts, meeting/home-visit schedules, findings, and follow-up.' },
-    notifications: { title: 'SMS Notifications', sprint: 'Sprint 6', detail: 'Consent-aware manual and automated messages, duplicate prevention, retries, and delivery monitoring.' },
+    notifications: { title: 'SMS Notifications', sprint: 'Sprint 6 — Implemented', detail: 'Consent-aware manual and automated messages, duplicate prevention, retries, and delivery monitoring.' },
     reports: { title: 'Reports & Audit Logs', sprint: 'Sprint 10', detail: 'Printable attendance, intervention and risk reports plus an auditable history of material system activity.' }
 };
 

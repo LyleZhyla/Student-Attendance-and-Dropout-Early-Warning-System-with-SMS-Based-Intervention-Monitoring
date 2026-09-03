@@ -17,9 +17,9 @@ const definitions = {
         fields: [['learner_reference_number', 'Learner reference number', 'text'], ['first_name', 'First name', 'text'], ['middle_name', 'Middle name', 'text'], ['last_name', 'Last name', 'text'], ['birth_date', 'Birth date', 'date'], ['address', 'Address', 'text'], ['user', 'Student login (optional)', 'student_accounts'], ['is_active', 'Active student', 'boolean']]
     },
     guardians: {
-        title: 'Guardians', columns: [['full_name', 'Guardian'], ['relationship', 'Relationship'], ['mobile_number', 'Mobile'], ['student_count', 'Students'], ['sms_consent', 'SMS consent']],
-        empty: { full_name: '', relationship: '', mobile_number: '', email: '', address: '', sms_consent: false, user: '' },
-        fields: [['full_name', 'Full name', 'text'], ['relationship', 'Relationship', 'text'], ['mobile_number', 'Mobile number', 'text'], ['email', 'Email', 'email'], ['address', 'Address', 'text'], ['user', 'Parent login (optional)', 'parent_accounts'], ['sms_consent', 'SMS consent recorded', 'boolean']]
+        title: 'Guardians', columns: [['full_name', 'Guardian'], ['relationship', 'Relationship'], ['mobile_number', 'Mobile'], ['student_count', 'Students'], ['mobile_verified', 'Mobile verified'], ['sms_consent', 'SMS consent']],
+        empty: { full_name: '', relationship: '', mobile_number: '', email: '', address: '', sms_consent: false, mobile_verified: false, user: '' },
+        fields: [['full_name', 'Full name', 'text'], ['relationship', 'Relationship', 'text'], ['mobile_number', 'Mobile number', 'text'], ['email', 'Email', 'email'], ['address', 'Address', 'text'], ['user', 'Parent login (optional)', 'parent_accounts'], ['mobile_verified', 'Mobile number verified', 'boolean'], ['sms_consent', 'SMS consent recorded', 'boolean']]
     },
     enrollments: {
         title: 'Enrollments', columns: [['student_name', 'Student'], ['section_name', 'Section'], ['school_year_name', 'School year'], ['status', 'Status'], ['enrolled_on', 'Enrolled on']],
@@ -83,7 +83,7 @@ const StudentManagement = () => {
 
     const display = (record, key) => {
         if (key === 'guardian_names') return record.guardians?.map((guardian) => `${guardian.full_name}${guardian.is_primary ? ' (primary)' : ''}`).join(', ') || '—';
-        if (['is_active', 'sms_consent', 'is_primary'].includes(key)) return record[key] ? 'Yes' : 'No';
+        if (['is_active', 'sms_consent', 'mobile_verified', 'is_primary'].includes(key)) return record[key] ? 'Yes' : 'No';
         return record[key] ?? '—';
     };
 

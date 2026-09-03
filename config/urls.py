@@ -38,6 +38,7 @@ from attendance.api import (
     attendance_analytics_api, attendance_bulk_api, attendance_options_api, attendance_records_api,
     attendance_roster_api,
 )
+from notifications.api import sms_logs_api, sms_options_api, sms_send_api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -75,6 +76,9 @@ urlpatterns = [
     path('api/attendance/bulk/', attendance_bulk_api, name='api-attendance-bulk'),
     path('api/attendance/records/', attendance_records_api, name='api-attendance-records'),
     path('api/attendance/analytics/', attendance_analytics_api, name='api-attendance-analytics'),
+    path('api/notifications/options/', sms_options_api, name='api-sms-options'),
+    path('api/notifications/', sms_logs_api, name='api-sms-logs'),
+    path('api/notifications/<int:record_id>/send/', sms_send_api, name='api-sms-send'),
     path('favicon.svg', react_asset, {'filename': 'favicon.svg'}, name='react-favicon'),
     path('asset-manifest.json', react_asset, {'filename': 'asset-manifest.json'}, name='react-asset-manifest'),
     re_path(r'^(?!api/|admin/).*$', react_app, name='react-app'),

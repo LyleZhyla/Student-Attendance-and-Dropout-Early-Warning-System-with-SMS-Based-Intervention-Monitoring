@@ -15,6 +15,7 @@ from students.models import Enrollment, Student
 
 from .models import AttendanceRecord
 from .serializers import AttendanceEntrySerializer, AttendanceRecordSerializer
+from notifications.services import queue_attendance_notifications
 
 
 def encoder_schedules(user):
@@ -247,6 +248,7 @@ def attendance_bulk_api(request):
 
     created_count = 0
     updated_count = 0
+    notification_count = 0
     with transaction.atomic():
         for entry in serializer.validated_data:
             defaults = {
@@ -255,11 +257,12 @@ def attendance_bulk_api(request):
                 'excuse_reason': entry.get('excuse_reason', ''),
                 'encoded_by': request.user,
             }
-            _, created = AttendanceRecord.objects.update_or_create(
+            record, created = AttendanceRecord.objects.update_or_create(
                 student_id=entry['student'], class_schedule=schedule, date=attendance_date, defaults=defaults
             )
             created_count += int(created)
             updated_count += int(not created)
+            notification_count += len(queue_attendance_notifications(record, created_by=request.user))
         AuditLog.objects.create(
             actor=request.user,
             action='ATTENDANCE_BULK_ENCODED',
@@ -269,6 +272,7 @@ def attendance_bulk_api(request):
             metadata={
                 'date': str(attendance_date), 'created': created_count,
                 'updated': updated_count, 'student_ids': student_ids,
+                'notifications_queued': notification_count,
             },
             ip_address=request.META.get('REMOTE_ADDR'),
         )
@@ -277,6 +281,7 @@ def attendance_bulk_api(request):
         'message': f'Attendance saved for {len(entries)} students.',
         'created': created_count,
         'updated': updated_count,
+        'notifications_queued': notification_count,
     })
 
 
