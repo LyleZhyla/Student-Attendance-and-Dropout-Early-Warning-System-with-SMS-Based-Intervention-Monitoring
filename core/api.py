@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from attendance.models import AttendanceRecord
 from interventions.models import InterventionCase
 from notifications.models import SMSLog
-from risk_assessment.models import RiskAssessment
+from risk_assessment.models import RiskAssessment, WellBeingCheckIn
 from students.models import Student
 from audit_logs.models import AuditLog
 
@@ -84,6 +84,7 @@ def dashboard_summary(request):
     risk_assessments = RiskAssessment.objects.all()
     interventions = InterventionCase.objects.all()
     sms_logs = SMSLog.objects.all()
+    well_being_checkins = WellBeingCheckIn.objects.all()
 
     if user.role == user.Role.TEACHER:
         students = students.filter(enrollments__section__schedules__teacher=user).distinct()
@@ -91,6 +92,7 @@ def dashboard_summary(request):
         risk_assessments = risk_assessments.filter(student__in=students)
         interventions = interventions.filter(student__in=students)
         sms_logs = sms_logs.filter(student__in=students)
+        well_being_checkins = well_being_checkins.none()
     elif user.role == user.Role.STUDENT:
         profile = getattr(user, 'student_profile', None)
         students = students.filter(pk=profile.pk) if profile else students.none()
@@ -100,6 +102,7 @@ def dashboard_summary(request):
         )
         interventions = interventions.filter(student__in=students)
         sms_logs = sms_logs.filter(student__in=students)
+        well_being_checkins = well_being_checkins.none()
     elif user.role == user.Role.PARENT:
         guardian = getattr(user, 'guardian_profile', None)
         students = students.filter(guardians=guardian).distinct() if guardian else students.none()
@@ -109,12 +112,14 @@ def dashboard_summary(request):
         )
         interventions = interventions.filter(student__in=students)
         sms_logs = sms_logs.filter(guardian=guardian) if guardian else sms_logs.none()
+        well_being_checkins = well_being_checkins.none()
     elif user.role not in (user.Role.ADMIN, user.Role.GUIDANCE) and not user.is_superuser:
         students = students.none()
         attendance = attendance.none()
         risk_assessments = risk_assessments.none()
         interventions = interventions.none()
         sms_logs = sms_logs.none()
+        well_being_checkins = well_being_checkins.none()
 
     today_attendance = attendance.filter(date=today)
     open_intervention_statuses = [
@@ -180,6 +185,9 @@ def dashboard_summary(request):
         'pending_risk_reviews': risk_assessments.filter(
             review_decision=RiskAssessment.ReviewDecision.PENDING
         ).count(),
+        'open_well_being_checkins': well_being_checkins.exclude(
+            status=WellBeingCheckIn.Status.CLOSED
+        ).count(),
         'open_interventions': interventions.filter(status__in=open_intervention_statuses).count(),
         'sms_sent': sms_logs.filter(status__in=[SMSLog.Status.SENT, SMSLog.Status.DELIVERED]).count(),
         'active_accounts': get_user_model().objects.filter(is_active=True).count()
@@ -192,6 +200,7 @@ def dashboard_summary(request):
             ('month_attendance_rate', 'Monthly Attendance', 'Recorded attendance rate this month', '#1e88e5'),
             ('high_risk_records', 'Confirmed High Priority', 'Human-reviewed support indicators', '#d81b60'),
             ('pending_risk_reviews', 'Pending Risk Reviews', 'Draft scores awaiting validation', '#8e24aa'),
+            ('open_well_being_checkins', 'Restricted Check-ins', 'Open guidance follow-up records', '#00695c'),
             ('open_interventions', 'Open Interventions', 'Active support cases', '#00897b'),
             ('sms_sent', 'SMS Sent', 'Sent or delivered messages', '#6d4c41'),
         ],
@@ -223,6 +232,7 @@ def dashboard_summary(request):
             ('active_students', 'Students Monitored', 'Active student population', '#5e35b1'),
             ('high_risk_records', 'Confirmed High Priority', 'Human-reviewed support indicators', '#d81b60'),
             ('pending_risk_reviews', 'Pending Risk Reviews', 'Draft scores awaiting validation', '#8e24aa'),
+            ('open_well_being_checkins', 'Restricted Check-ins', 'Open guidance follow-up records', '#00695c'),
             ('open_interventions', 'Open Interventions', 'Active support cases', '#00897b'),
             ('month_attendance_rate', 'Monthly Attendance', 'Recorded student attendance rate', '#1e88e5'),
             ('late_today', 'Late Today', 'Students marked late', '#fb8c00'),
@@ -258,5 +268,6 @@ def dashboard_summary(request):
             'manage_users': user.role == user.Role.ADMIN or user.is_superuser,
             'encode_attendance': user.role in (user.Role.ADMIN, user.Role.TEACHER),
             'review_sensitive_risk': user.role in (user.Role.ADMIN, user.Role.GUIDANCE),
+            'manage_well_being': user.role in (user.Role.ADMIN, user.Role.GUIDANCE) or user.is_superuser,
         },
     })

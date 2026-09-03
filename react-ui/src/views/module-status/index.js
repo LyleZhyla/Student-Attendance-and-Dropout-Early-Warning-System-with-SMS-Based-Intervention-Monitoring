@@ -7,7 +7,8 @@ import MainCard from '../../ui-component/cards/MainCard';
 const modules = {
     students: { title: 'Students & Guardians', sprint: 'Sprint 3', detail: 'Student profiles, verified guardians, sections, advisers, schedules, enrollment, and CSV/Excel import.' },
     attendance: { title: 'Attendance', sprint: 'Sprint 4–5', detail: 'Bulk attendance encoding, correction controls, monthly summaries, trends, and role-specific monitoring.' },
-    risk: { title: 'Risk Assessment', sprint: 'Sprint 8 — Implemented', detail: 'Explainable attendance-based early-warning indicators and required human review. Restricted well-being assessment remains planned for Sprint 9.' },
+    risk: { title: 'Risk Assessment', sprint: 'Sprint 8 — Implemented', detail: 'Explainable attendance-based early-warning indicators and required human review.' },
+    wellbeing: { title: 'Restricted Well-being Check-ins', sprint: 'Sprint 9 — Implemented', detail: 'Consent-aware support check-ins, restricted responses and notes, and human-managed follow-up.' },
     interventions: { title: 'Interventions & Home Visits', sprint: 'Sprint 7 — Implemented', detail: 'Case ownership, parent contact attempts, meeting/home-visit schedules, findings, and follow-up.' },
     notifications: { title: 'SMS Notifications', sprint: 'Sprint 6 — Implemented', detail: 'Consent-aware manual and automated messages, duplicate prevention, retries, and delivery monitoring.' },
     reports: { title: 'Reports & Audit Logs', sprint: 'Sprint 10', detail: 'Printable attendance, intervention and risk reports plus an auditable history of material system activity.' }

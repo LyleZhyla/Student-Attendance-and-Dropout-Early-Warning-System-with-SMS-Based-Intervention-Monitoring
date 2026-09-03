@@ -46,6 +46,9 @@ from interventions.api import (
 from risk_assessment.api import (
     generate_risk_assessments_api, review_risk_assessment_api, risk_assessments_api, risk_options_api,
 )
+from risk_assessment.well_being_api import (
+    well_being_checkin_detail_api, well_being_checkins_api, well_being_options_api,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -94,6 +97,9 @@ urlpatterns = [
     path('api/risk-assessments/', risk_assessments_api, name='api-risk-assessments'),
     path('api/risk-assessments/generate/', generate_risk_assessments_api, name='api-risk-generate'),
     path('api/risk-assessments/<int:record_id>/review/', review_risk_assessment_api, name='api-risk-review'),
+    path('api/well-being/options/', well_being_options_api, name='api-well-being-options'),
+    path('api/well-being/', well_being_checkins_api, name='api-well-being-checkins'),
+    path('api/well-being/<int:record_id>/', well_being_checkin_detail_api, name='api-well-being-detail'),
     path('favicon.svg', react_asset, {'filename': 'favicon.svg'}, name='react-favicon'),
     path('asset-manifest.json', react_asset, {'filename': 'asset-manifest.json'}, name='react-asset-manifest'),
     re_path(r'^(?!api/|admin/).*$', react_app, name='react-app'),

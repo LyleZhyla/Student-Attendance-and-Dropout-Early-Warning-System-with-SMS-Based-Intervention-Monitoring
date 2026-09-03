@@ -93,3 +93,17 @@ class IsRiskReviewer(BasePermission):
                 or request.user.role in (request.user.Role.ADMIN, request.user.Role.GUIDANCE)
             )
         )
+
+
+class IsWellBeingStaff(BasePermission):
+    message = 'Administrator or Guidance Personnel access is required for restricted well-being records.'
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and (
+                request.user.is_superuser
+                or request.user.role in (request.user.Role.ADMIN, request.user.Role.GUIDANCE)
+            )
+        )

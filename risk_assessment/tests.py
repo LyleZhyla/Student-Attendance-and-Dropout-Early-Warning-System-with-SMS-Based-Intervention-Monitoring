@@ -13,8 +13,9 @@ from audit_logs.models import AuditLog
 from interventions.models import InterventionCase
 from students.models import Enrollment, Student
 
-from .models import RiskAssessment
+from .models import RiskAssessment, WellBeingCheckIn
 from .services import ReviewedAssessmentExists, calculate_risk, generate_assessment
+from .well_being import PRIVACY_NOTICE_VERSION
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -151,5 +152,130 @@ class RiskAssessmentWorkflowTests(TestCase):
         self.assertEqual(assessment.review_decision, RiskAssessment.ReviewDecision.NEEDS_MORE_INFO)
         self.assertEqual(assessment.reviewed_by, self.guidance)
         self.assertTrue(AuditLog.objects.filter(action='RISK_ASSESSMENT_REVIEWED').exists())
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class WellBeingCheckInTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.admin = User.objects.create_user(username='well-admin', password='Pass-4821', role=User.Role.ADMIN)
+        self.guidance = User.objects.create_user(username='well-guidance', password='Pass-4821', role=User.Role.GUIDANCE)
+        self.teacher = User.objects.create_user(username='well-teacher', password='Pass-4821', role=User.Role.TEACHER)
+        self.parent = User.objects.create_user(username='well-parent', password='Pass-4821', role=User.Role.PARENT)
+        self.student_user = User.objects.create_user(username='well-student', password='Pass-4821', role=User.Role.STUDENT)
+        self.today = timezone.localdate()
+        self.student = Student.objects.create(
+            user=self.student_user, learner_reference_number='500000000099', first_name='Mia', last_name='Garcia'
+        )
+
+    def auth(self, user):
+        token, _ = Token.objects.get_or_create(user=user)
+        return {'HTTP_AUTHORIZATION': f'Token {token.key}'}
+
+    def payload(self, **overrides):
+        values = {
+            'student': self.student.pk,
+            'conducted_on': str(self.today),
+            'privacy_notice_version': PRIVACY_NOTICE_VERSION,
+            'consent_confirmed': True,
+            'responses': {
+                'attendance_barriers': 'SOME',
+                'school_connection': 'OKAY',
+                'support_access': 'YES',
+                'support_requested': True,
+                'support_topics': ['ACADEMIC', 'TRANSPORTATION'],
+            },
+            'support_priority': 'PROMPT',
+            'private_notes': 'Restricted guidance context.',
+            'recommended_actions': '',
+        }
+        values.update(overrides)
+        return values
+
+    def create(self, **overrides):
+        return self.client.post(
+            reverse('api-well-being-checkins'), self.payload(**overrides),
+            content_type='application/json', **self.auth(self.guidance),
+        )
+
+    def test_only_admin_and_guidance_can_access_restricted_records(self):
+        self.assertEqual(self.client.get(reverse('api-well-being-checkins'), **self.auth(self.admin)).status_code, 200)
+        self.assertEqual(self.client.get(reverse('api-well-being-checkins'), **self.auth(self.guidance)).status_code, 200)
+        self.assertEqual(self.client.get(reverse('api-well-being-checkins'), **self.auth(self.teacher)).status_code, 403)
+        self.assertEqual(self.client.get(reverse('api-well-being-checkins'), **self.auth(self.parent)).status_code, 403)
+        self.assertEqual(self.client.get(reverse('api-well-being-checkins'), **self.auth(self.student_user)).status_code, 403)
+
+    def test_create_requires_consent_current_notice_and_approved_response_schema(self):
+        self.assertEqual(self.create(consent_confirmed=False).status_code, 400)
+        self.assertEqual(self.create(privacy_notice_version='old-notice').status_code, 400)
+        invalid = self.payload()
+        invalid['responses']['unsupported_question'] = 'value'
+        response = self.client.post(
+            reverse('api-well-being-checkins'), invalid, content_type='application/json', **self.auth(self.guidance)
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(WellBeingCheckIn.objects.exists())
+
+    def test_collection_excludes_raw_responses_and_private_notes(self):
+        created = self.create()
+        self.assertEqual(created.status_code, 201)
+        record_id = created.json()['record']['id']
+        listing = self.client.get(reverse('api-well-being-checkins'), **self.auth(self.admin)).json()['records'][0]
+        detail = self.client.get(reverse('api-well-being-detail', args=[record_id]), **self.auth(self.admin)).json()['record']
+        self.assertNotIn('responses', listing)
+        self.assertNotIn('private_notes', listing)
+        self.assertEqual(detail['responses']['support_requested'], True)
+        self.assertEqual(detail['private_notes'], 'Restricted guidance context.')
+
+    def test_duplicate_student_date_is_rejected_as_conflict(self):
+        self.assertEqual(self.create().status_code, 201)
+        self.assertEqual(self.create().status_code, 409)
+
+    def test_submitted_responses_and_identity_are_immutable(self):
+        record_id = self.create().json()['record']['id']
+        response = self.client.patch(
+            reverse('api-well-being-detail', args=[record_id]), {'responses': self.payload()['responses']},
+            content_type='application/json', **self.auth(self.admin),
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_action_plan_and_closure_rules_are_enforced(self):
+        record_id = self.create(private_notes='').json()['record']['id']
+        endpoint = reverse('api-well-being-detail', args=[record_id])
+        missing_plan = self.client.patch(
+            endpoint, {'status': 'ACTION_PLANNED'}, content_type='application/json', **self.auth(self.guidance)
+        )
+        self.assertEqual(missing_plan.status_code, 400)
+        planned = self.client.patch(endpoint, {
+            'status': 'ACTION_PLANNED', 'support_priority': 'URGENT',
+            'recommended_actions': 'Guidance will meet the student today and coordinate approved support.'
+        }, content_type='application/json', **self.auth(self.guidance))
+        self.assertEqual(planned.status_code, 200)
+        closed_missing_notes = self.client.patch(
+            endpoint, {'status': 'CLOSED'}, content_type='application/json', **self.auth(self.guidance)
+        )
+        self.assertEqual(closed_missing_notes.status_code, 400)
+        closed = self.client.patch(endpoint, {
+            'status': 'CLOSED', 'private_notes': 'Approved support handoff completed.'
+        }, content_type='application/json', **self.auth(self.guidance))
+        self.assertEqual(closed.status_code, 200)
+        self.assertEqual(closed.json()['record']['status'], 'CLOSED')
+        immutable = self.client.patch(
+            endpoint, {'private_notes': 'Changed'}, content_type='application/json', **self.auth(self.admin)
+        )
+        self.assertEqual(immutable.status_code, 400)
+
+    def test_audit_log_does_not_copy_responses_or_private_notes(self):
+        self.create()
+        event = AuditLog.objects.get(action='WELL_BEING_CHECKIN_CREATED')
+        serialized = str(event.metadata)
+        self.assertNotIn('attendance_barriers', serialized)
+        self.assertNotIn('Restricted guidance context', serialized)
+
+    def test_well_being_responses_do_not_change_automated_risk_score(self):
+        before = calculate_risk(self.student, self.today)['score']
+        self.assertEqual(self.create().status_code, 201)
+        after = calculate_risk(self.student, self.today)['score']
+        self.assertEqual(before, after)
 
 # Create your tests here.
