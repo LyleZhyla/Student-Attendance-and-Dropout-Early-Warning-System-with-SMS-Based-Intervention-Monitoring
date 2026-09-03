@@ -16,6 +16,8 @@ const StudentManagement = Loadable(lazy(() => import('../views/students/StudentM
 const AttendanceManagement = Loadable(lazy(() => import('../views/attendance/AttendanceManagement')));
 const AttendanceAnalytics = Loadable(lazy(() => import('../views/attendance/AttendanceAnalytics')));
 const NotificationManagement = Loadable(lazy(() => import('../views/notifications/NotificationManagement')));
+const InterventionManagement = Loadable(lazy(() => import('../views/interventions/InterventionManagement')));
+const RiskAssessmentManagement = Loadable(lazy(() => import('../views/risk/RiskAssessmentManagement')));
 
 //-----------------------|| MAIN ROUTING ||-----------------------//
 
@@ -33,7 +35,9 @@ const MainRoutes = () => {
                 '/students',
                 '/attendance',
                 '/attendance/analytics',
-                '/notifications'
+                '/notifications',
+                '/interventions',
+                '/risk-assessments'
             ]}
         >
             <MainLayout>
@@ -48,6 +52,8 @@ const MainRoutes = () => {
                         <Route exact path="/attendance" component={AttendanceManagement} />
                         <Route exact path="/attendance/analytics" component={AttendanceAnalytics} />
                         <Route exact path="/notifications" component={NotificationManagement} />
+                        <Route exact path="/interventions" component={InterventionManagement} />
+                        <Route exact path="/risk-assessments" component={RiskAssessmentManagement} />
                     </AuthGuard>
                 </Switch>
             </MainLayout>

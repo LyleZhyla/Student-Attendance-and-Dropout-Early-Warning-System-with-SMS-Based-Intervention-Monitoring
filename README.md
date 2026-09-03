@@ -54,6 +54,23 @@ TardyTrack is a student attendance and dropout early-warning system with an SMS-
 - Optional unexcused-absence automation with safe cancellation after attendance corrections
 - Safe local provider boundary ready for an approved production SMS adapter
 
+## Sprint 7 delivered
+
+- Role-scoped intervention case register for Administrators, Guidance Personnel, and Teachers
+- Enforced case workflow, assigned ownership, scheduling, findings, and follow-up rules
+- Parent-contact attempts with linked guardian, channel, outcome, and notes
+- Meeting, home-visit, follow-up, and general case activity history
+- Search, status summaries, case timelines, and auditable material changes
+
+## Sprint 8 delivered
+
+- Transparent attendance-based early-warning scoring under a versioned draft policy
+- Explainable point components for absence, consecutive absence, lateness, attendance decline, and unresolved interventions
+- Required Administrator or Guidance Personnel review with retained decisions and notes
+- Teacher access limited to confirmed indicators for currently assigned students
+- Idempotent draft recalculation and protection for reviewed historical results
+- Risk summary, filtering, generation, review, and score-explanation interface
+
 ## Run locally (CMD)
 
 ### One-command launcher
@@ -98,6 +115,8 @@ The imported Berry template uses a legacy React 17 / Material UI beta dependency
 - [Sprint 4 attendance encoding](docs/SPRINT_4_ATTENDANCE.md)
 - [Sprint 5 attendance summaries and dashboards](docs/SPRINT_5_ATTENDANCE_ANALYTICS.md)
 - [Sprint 6 SMS notifications](docs/SPRINT_6_SMS_NOTIFICATIONS.md)
+- [Sprint 7 interventions and home visits](docs/SPRINT_7_INTERVENTIONS.md)
+- [Sprint 8 explainable risk assessment](docs/SPRINT_8_RISK_ASSESSMENT.md)
 
 ## Verify
 

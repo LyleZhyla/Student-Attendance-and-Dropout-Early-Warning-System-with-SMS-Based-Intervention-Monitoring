@@ -24,7 +24,9 @@ const roadmap = [
     ['Sprint 4', 'Attendance encoding', 'Complete'],
     ['Sprint 5', 'Summaries and dashboards', 'Complete'],
     ['Sprint 6', 'SMS notification workflow', 'Implemented'],
-    ['Sprint 7+', 'Interventions, risk and reports', 'Planned']
+    ['Sprint 7', 'Interventions and home visits', 'Implemented'],
+    ['Sprint 8', 'Explainable risk assessment', 'Implemented'],
+    ['Sprint 9+', 'Well-being assessment and reports', 'Planned']
 ];
 
 const Dashboard = () => {

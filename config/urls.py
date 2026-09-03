@@ -39,6 +39,13 @@ from attendance.api import (
     attendance_roster_api,
 )
 from notifications.api import sms_logs_api, sms_options_api, sms_send_api
+from interventions.api import (
+    intervention_activities_api, intervention_case_detail_api, intervention_cases_api,
+    intervention_options_api,
+)
+from risk_assessment.api import (
+    generate_risk_assessments_api, review_risk_assessment_api, risk_assessments_api, risk_options_api,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -79,6 +86,14 @@ urlpatterns = [
     path('api/notifications/options/', sms_options_api, name='api-sms-options'),
     path('api/notifications/', sms_logs_api, name='api-sms-logs'),
     path('api/notifications/<int:record_id>/send/', sms_send_api, name='api-sms-send'),
+    path('api/interventions/options/', intervention_options_api, name='api-intervention-options'),
+    path('api/interventions/', intervention_cases_api, name='api-intervention-cases'),
+    path('api/interventions/<int:record_id>/', intervention_case_detail_api, name='api-intervention-case-detail'),
+    path('api/interventions/<int:record_id>/activities/', intervention_activities_api, name='api-intervention-activities'),
+    path('api/risk-assessments/options/', risk_options_api, name='api-risk-options'),
+    path('api/risk-assessments/', risk_assessments_api, name='api-risk-assessments'),
+    path('api/risk-assessments/generate/', generate_risk_assessments_api, name='api-risk-generate'),
+    path('api/risk-assessments/<int:record_id>/review/', review_risk_assessment_api, name='api-risk-review'),
     path('favicon.svg', react_asset, {'filename': 'favicon.svg'}, name='react-favicon'),
     path('asset-manifest.json', react_asset, {'filename': 'asset-manifest.json'}, name='react-asset-manifest'),
     re_path(r'^(?!api/|admin/).*$', react_app, name='react-app'),
