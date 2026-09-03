@@ -10,9 +10,26 @@ if not exist ".venv\Scripts\python.exe" (
     exit /b 1
 )
 
+set "NPM_CLI=%ProgramFiles%\nodejs\node_modules\npm\bin\npm-cli.js"
+
 if not exist "react-ui\node_modules" (
     echo Installing frontend dependencies for the first run...
-    call npm.cmd --prefix react-ui install --legacy-peer-deps
+    if exist "%NPM_CLI%" (
+        node "%NPM_CLI%" --prefix react-ui install --legacy-peer-deps
+    ) else (
+        call npm.cmd --prefix react-ui install --legacy-peer-deps
+    )
+    if errorlevel 1 exit /b 1
+)
+
+if not exist "react-ui\build\index.html" (
+    echo Building the TardyTrack interface...
+    set "NODE_OPTIONS=--openssl-legacy-provider"
+    if exist "%NPM_CLI%" (
+        node "%NPM_CLI%" --prefix react-ui run build
+    ) else (
+        call npm.cmd --prefix react-ui run build
+    )
     if errorlevel 1 exit /b 1
 )
 
@@ -20,12 +37,10 @@ echo Applying database migrations...
 ".venv\Scripts\python.exe" manage.py migrate
 if errorlevel 1 exit /b 1
 
-set "NODE_OPTIONS=--openssl-legacy-provider"
 echo.
 echo Starting TardyTrack...
-echo Backend:  http://127.0.0.1:8000
-echo Frontend: http://localhost:3000
-echo Press Ctrl+C once to stop both servers.
+echo Open: http://localhost:3000
+echo Press Ctrl+C to stop the server.
 echo.
 
-call npm.cmd --prefix react-ui run system
+".venv\Scripts\python.exe" manage.py runserver 127.0.0.1:3000

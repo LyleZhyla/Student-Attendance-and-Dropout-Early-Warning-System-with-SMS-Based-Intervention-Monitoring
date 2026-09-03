@@ -2,16 +2,16 @@
 
 ## Django domain backend with React admin interface
 
-The domain remains a modular Django monolith. It keeps transactions, permissions, reporting, and deployment simple while allowing each domain to remain separated. The imported Berry React template is now the operator interface, connected to the canonical Django models through a small authenticated REST API. Django Admin and the server-rendered foundation remain available for administration and fallback access.
+The domain remains a modular Django monolith. It keeps transactions, permissions, reporting, and deployment simple while allowing each domain to remain separated. The Berry React interface and Django API are served from one origin and one local process. Django Admin remains available at `/admin/`.
 
 ```text
-React browser UI (localhost:3000)
-  -> token-authenticated Django REST endpoints (localhost:8000/api)
+Browser (localhost:3000)
+  -> Django serves the compiled React interface and token-authenticated /api endpoints
       -> accounts / students / academics / attendance
       -> notifications / interventions / risk / reports / audit
           -> PostgreSQL (production) or SQLite (local development)
 
-Django Admin/templates
+Django Admin
   -> same canonical Django models and database
 ```
 

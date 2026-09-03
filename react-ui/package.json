@@ -41,7 +41,6 @@
     },
     "scripts": {
         "start": "react-scripts start",
-        "system": "concurrently --kill-others --names BACKEND,FRONTEND --prefix-colors blue,green \"..\\.venv\\Scripts\\python.exe ..\\manage.py runserver 127.0.0.1:8000\" \"react-scripts start\"",
         "build": "react-scripts build",
         "test": "react-scripts test --passWithNoTests",
         "eject": "react-scripts eject"
@@ -63,7 +62,6 @@
     },
     "devDependencies": {
         "@material-ui/codemod": "^5.0.0-alpha.35",
-        "concurrently": "^8.2.2",
         "sass": "^1.32.11"
     }
 }

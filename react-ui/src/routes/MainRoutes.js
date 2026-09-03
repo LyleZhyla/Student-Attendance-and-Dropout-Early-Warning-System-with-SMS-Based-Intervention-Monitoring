@@ -11,6 +11,8 @@ const DashboardDefault = Loadable(lazy(() => import('../views/dashboard/Default'
 const ModuleStatus = Loadable(lazy(() => import('../views/module-status')));
 const UserManagement = Loadable(lazy(() => import('../views/accounts/UserManagement')));
 const AccountSecurity = Loadable(lazy(() => import('../views/accounts/AccountSecurity')));
+const AcademicManagement = Loadable(lazy(() => import('../views/academics/AcademicManagement')));
+const StudentManagement = Loadable(lazy(() => import('../views/students/StudentManagement')));
 
 //-----------------------|| MAIN ROUTING ||-----------------------//
 
@@ -23,7 +25,9 @@ const MainRoutes = () => {
                 '/dashboard',
                 '/module/:moduleKey',
                 '/accounts/users',
-                '/account/security'
+                '/account/security',
+                '/academics',
+                '/students'
             ]}
         >
             <MainLayout>
@@ -33,6 +37,8 @@ const MainRoutes = () => {
                         <Route exact path="/module/:moduleKey" component={ModuleStatus} />
                         <Route exact path="/accounts/users" component={UserManagement} />
                         <Route exact path="/account/security" component={AccountSecurity} />
+                        <Route exact path="/academics" component={AcademicManagement} />
+                        <Route exact path="/students" component={StudentManagement} />
                     </AuthGuard>
                 </Switch>
             </MainLayout>

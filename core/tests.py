@@ -1,23 +1,27 @@
+import tempfile
+from pathlib import Path
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from students.models import Student
 
 
 class DashboardTests(TestCase):
-    def test_anonymous_user_is_redirected_to_login(self):
-        response = self.client.get(reverse('dashboard'))
-        self.assertRedirects(response, f"{reverse('login')}?next={reverse('dashboard')}")
+    def test_root_and_client_routes_serve_the_react_app(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            Path(temp_dir, 'index.html').write_text('<div id="root">TardyTrack</div>', encoding='utf-8')
+            with override_settings(REACT_BUILD_DIR=Path(temp_dir)):
+                self.assertContains(self.client.get('/'), 'TardyTrack')
+                self.assertContains(self.client.get('/dashboard'), 'TardyTrack')
 
-    def test_authenticated_user_sees_role_dashboard(self):
-        user = get_user_model().objects.create_user(
-            username='teacher', password='safe-test-password', role='TEACHER'
-        )
-        self.client.force_login(user)
-        response = self.client.get(reverse('dashboard'))
-        self.assertContains(response, 'Teacher workspace')
-        self.assertContains(response, 'Foundation ready')
+    def test_missing_react_build_has_helpful_response(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with override_settings(REACT_BUILD_DIR=Path(temp_dir)):
+                response = self.client.get('/')
+        self.assertEqual(response.status_code, 503)
+        self.assertContains(response, 'run-system.cmd', status_code=503)
 
 
 class ApiAuthenticationTests(TestCase):

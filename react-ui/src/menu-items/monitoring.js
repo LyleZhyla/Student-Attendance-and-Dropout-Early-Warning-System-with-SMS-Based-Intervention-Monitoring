@@ -1,4 +1,4 @@
-import { IconBellRinging, IconBug, IconDeviceAnalytics, IconPhoneCall, IconReceipt2 } from '@tabler/icons';
+import { IconBellRinging, IconBook, IconBug, IconDeviceAnalytics, IconPhoneCall, IconReceipt2 } from '@tabler/icons';
 
 export const monitoring = {
     id: 'tardytrack-modules',
@@ -6,7 +6,8 @@ export const monitoring = {
     caption: 'Implemented by sprint',
     type: 'group',
     children: [
-        { id: 'students', title: 'Students & Guardians', type: 'item', url: '/module/students', icon: IconDeviceAnalytics, breadcrumbs: false, roles: ['ADMIN', 'TEACHER', 'GUIDANCE'] },
+        { id: 'academics', title: 'Academic Setup', type: 'item', url: '/academics', icon: IconBook, breadcrumbs: false, roles: ['ADMIN'] },
+        { id: 'students', title: 'Students & Guardians', type: 'item', url: '/students', icon: IconDeviceAnalytics, breadcrumbs: false, roles: ['ADMIN'] },
         { id: 'attendance', title: 'Attendance', type: 'item', url: '/module/attendance', icon: IconReceipt2, breadcrumbs: false, roles: ['ADMIN', 'TEACHER', 'STUDENT', 'PARENT'] },
         { id: 'risk', title: 'Risk Assessment', type: 'item', url: '/module/risk', icon: IconBug, breadcrumbs: false },
         { id: 'interventions', title: 'Interventions & Visits', type: 'item', url: '/module/interventions', icon: IconPhoneCall, breadcrumbs: false, roles: ['ADMIN', 'TEACHER', 'GUIDANCE'] },

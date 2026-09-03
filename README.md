@@ -1,6 +1,6 @@
 # TardyTrack
 
-TardyTrack is a student attendance and dropout early-warning system with a planned SMS-based intervention workflow. Sprint 1 establishes the approved requirements, database design, and a runnable Django foundation.
+TardyTrack is a student attendance and dropout early-warning system with an SMS-based intervention workflow roadmap.
 
 ## Sprint 1 delivered
 
@@ -21,6 +21,14 @@ TardyTrack is a student attendance and dropout early-warning system with a plann
 - Activation/deactivation, administrator password reset, and safety protections
 - Account/login/logout audit events
 
+## Sprint 3 delivered
+
+- Academic setup for school years, grade levels, subjects, sections, advisers, and class schedules
+- Student and guardian profiles linked to role-compatible login accounts
+- Enrollment lifecycle and student-to-guardian assignment workflows
+- Conflict detection for schedules and duplicate active enrollments
+- Administrator React screens, protected APIs, validation, and audit records
+
 ## Run locally (CMD)
 
 ### One-command launcher
@@ -31,7 +39,7 @@ From the project directory, run:
 run-system
 ```
 
-The launcher applies pending Django migrations and starts both the backend and React frontend in one CMD window. Open `http://localhost:3000/`. Press `Ctrl+C` once to stop both processes.
+The launcher installs/builds the React interface when needed, applies pending migrations, then serves the interface and API through one Django process. Open only `http://localhost:3000/`. Press `Ctrl+C` to stop it.
 
 ### Manual startup
 
@@ -41,21 +49,15 @@ cd /d C:\xampp\htdocs\TARDYTRACK
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
-python manage.py runserver
-```
-
-In a second CMD window, run the React interface:
-
-```cmd
-cd /d C:\xampp\htdocs\TARDYTRACK\react-ui
+cd react-ui
 npm install --legacy-peer-deps
 set NODE_OPTIONS=--openssl-legacy-provider
-npm start
+npm run build
+cd ..
+python manage.py runserver 127.0.0.1:3000
 ```
 
-Open `http://localhost:3000/`. Django runs at `http://127.0.0.1:8000/` and remains the canonical backend. SQLite is used when `POSTGRES_DB` is not set.
-
-The imported `api-server-django/` directory belongs to the original UI starter and is retained locally as reference only. It is Git-ignored: do not run or publish it for TardyTrack because it has a separate generic user model that is not connected to the approved schema.
+Open `http://localhost:3000/`. The React interface and Django API use the same origin. SQLite is used when `POSTGRES_DB` is not set.
 
 ### Template dependency note
 
@@ -67,6 +69,7 @@ The imported Berry template uses a legacy React 17 / Material UI beta dependency
 - [Database design and ERD](docs/DATABASE_DESIGN.md)
 - [Architecture decisions](docs/ARCHITECTURE.md)
 - [Sprint 2 accounts and permissions](docs/SPRINT_2_ACCOUNTS_AND_PERMISSIONS.md)
+- [Sprint 3 academic and student master data](docs/SPRINT_3_MASTER_DATA.md)
 
 ## Verify
 

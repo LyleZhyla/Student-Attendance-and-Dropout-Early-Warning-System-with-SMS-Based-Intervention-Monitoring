@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -13,6 +14,10 @@ class Guardian(models.Model):
 
     def __str__(self):
         return self.full_name
+
+    def clean(self):
+        if self.user_id and self.user.role != self.user.Role.PARENT:
+            raise ValidationError({'user': 'A guardian profile can only use a Parent/Guardian account.'})
 
 
 class Student(models.Model):
@@ -32,6 +37,10 @@ class Student(models.Model):
     def __str__(self):
         return f'{self.last_name}, {self.first_name}'
 
+    def clean(self):
+        if self.user_id and self.user.role != self.user.Role.STUDENT:
+            raise ValidationError({'user': 'A student profile can only use a Student account.'})
+
 
 class StudentGuardian(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -39,7 +48,12 @@ class StudentGuardian(models.Model):
     is_primary = models.BooleanField(default=False)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=('student', 'guardian'), name='unique_student_guardian')]
+        constraints = [
+            models.UniqueConstraint(fields=('student', 'guardian'), name='unique_student_guardian'),
+            models.UniqueConstraint(
+                fields=('student',), condition=models.Q(is_primary=True), name='unique_primary_guardian_per_student'
+            ),
+        ]
 
 
 class Enrollment(models.Model):
@@ -59,5 +73,9 @@ class Enrollment(models.Model):
 
     def __str__(self):
         return f'{self.student} / {self.section}'
+
+    def clean(self):
+        if self.student_id and not self.student.is_active and self.status == self.Status.ENROLLED:
+            raise ValidationError({'student': 'An inactive student cannot have an active enrollment.'})
 
 # Create your models here.
