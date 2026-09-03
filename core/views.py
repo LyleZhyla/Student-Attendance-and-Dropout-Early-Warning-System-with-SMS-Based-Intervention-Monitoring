@@ -17,5 +17,9 @@ def react_asset(request, filename):
     asset_file = Path(settings.REACT_BUILD_DIR) / filename
     if not asset_file.is_file() or asset_file.parent != Path(settings.REACT_BUILD_DIR):
         raise Http404
-    content_types = {'favicon.svg': 'image/svg+xml', 'asset-manifest.json': 'application/json'}
+    content_types = {
+        'favicon.svg': 'image/svg+xml',
+        'tardytrack-logo.png': 'image/png',
+        'asset-manifest.json': 'application/json',
+    }
     return FileResponse(asset_file.open('rb'), content_type=content_types.get(filename, 'application/octet-stream'))

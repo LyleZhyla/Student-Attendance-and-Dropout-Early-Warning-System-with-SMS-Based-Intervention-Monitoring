@@ -101,6 +101,7 @@ urlpatterns = [
     path('api/well-being/', well_being_checkins_api, name='api-well-being-checkins'),
     path('api/well-being/<int:record_id>/', well_being_checkin_detail_api, name='api-well-being-detail'),
     path('favicon.svg', react_asset, {'filename': 'favicon.svg'}, name='react-favicon'),
+    path('tardytrack-logo.png', react_asset, {'filename': 'tardytrack-logo.png'}, name='react-logo'),
     path('asset-manifest.json', react_asset, {'filename': 'asset-manifest.json'}, name='react-asset-manifest'),
     re_path(r'^(?!api/|admin/).*$', react_app, name='react-app'),
 ]

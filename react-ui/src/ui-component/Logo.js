@@ -4,15 +4,17 @@ import { Box, Typography } from '@material-ui/core';
 const Logo = () => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box
-            component="span"
+            component="img"
+            src={`${process.env.PUBLIC_URL}/tardytrack-logo.png`}
+            alt="TardyTrack logo"
             sx={{
-                display: 'grid', placeItems: 'center', width: 36, height: 36,
-                borderRadius: '11px', bgcolor: 'primary.main', color: 'white',
-                fontSize: 20, fontWeight: 800
+                display: 'block',
+                width: 46,
+                height: 46,
+                flexShrink: 0,
+                objectFit: 'contain'
             }}
-        >
-            T
-        </Box>
+        />
         <Box>
             <Typography component="div" sx={{ fontSize: 19, fontWeight: 800, lineHeight: 1, color: 'grey.900' }}>
                 TardyTrack
