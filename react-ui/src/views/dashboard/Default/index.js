@@ -20,7 +20,7 @@ const roadmap = [
     ['Sprint 1', 'Foundation & database design', 'Complete'],
     ['Sprint 2', 'Accounts, roles & permissions', 'Complete'],
     ['Sprint 3', 'Student and academic records', 'Complete'],
-    ['Sprint 4', 'Attendance encoding', 'Planned'],
+    ['Sprint 4', 'Attendance encoding', 'Complete'],
     ['Sprint 5', 'Summaries and dashboards', 'Planned'],
     ['Sprint 6+', 'SMS, interventions, risk and reports', 'Planned']
 ];

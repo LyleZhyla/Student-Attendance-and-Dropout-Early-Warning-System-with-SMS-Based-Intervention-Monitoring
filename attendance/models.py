@@ -33,6 +33,23 @@ class AttendanceRecord(models.Model):
             errors['date'] = 'Attendance cannot be recorded for a future date.'
         if self.status == self.Status.ABSENT_EXCUSED and not self.excuse_reason.strip():
             errors['excuse_reason'] = 'A reason is required for an excused absence.'
+        if self.student_id and self.class_schedule_id and self.date:
+            from students.models import Enrollment
+
+            schedule = self.class_schedule
+            if not schedule.section.school_year.starts_on <= self.date <= schedule.section.school_year.ends_on:
+                errors['date'] = 'Attendance date must be within the schedule school year.'
+            elif self.date.isoweekday() != schedule.weekday:
+                errors['date'] = f'This class is scheduled on {schedule.get_weekday_display()}.'
+            enrolled = Enrollment.objects.filter(
+                student_id=self.student_id,
+                section_id=schedule.section_id,
+                status=Enrollment.Status.ENROLLED,
+                enrolled_on__lte=self.date,
+                student__is_active=True,
+            ).exists()
+            if not enrolled:
+                errors['student'] = 'The student is not actively enrolled in this schedule section on this date.'
         if errors:
             raise ValidationError(errors)
 

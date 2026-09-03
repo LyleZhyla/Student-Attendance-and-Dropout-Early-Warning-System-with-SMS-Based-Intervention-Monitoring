@@ -29,6 +29,14 @@ TardyTrack is a student attendance and dropout early-warning system with an SMS-
 - Conflict detection for schedules and duplicate active enrollments
 - Administrator React screens, protected APIs, validation, and audit records
 
+## Sprint 4 delivered
+
+- Role-scoped class schedules, rosters, and attendance history
+- Bulk attendance encoding and safe correction of existing entries
+- Active-enrollment, school-year, class-day, future-date, and excuse validation
+- Atomic saves and audit events for attendance changes
+- React attendance workspace for administrators, teachers, students, and guardians
+
 ## Run locally (CMD)
 
 ### One-command launcher
@@ -70,6 +78,7 @@ The imported Berry template uses a legacy React 17 / Material UI beta dependency
 - [Architecture decisions](docs/ARCHITECTURE.md)
 - [Sprint 2 accounts and permissions](docs/SPRINT_2_ACCOUNTS_AND_PERMISSIONS.md)
 - [Sprint 3 academic and student master data](docs/SPRINT_3_MASTER_DATA.md)
+- [Sprint 4 attendance encoding](docs/SPRINT_4_ATTENDANCE.md)
 
 ## Verify
 
