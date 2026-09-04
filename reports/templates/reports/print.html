@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>{{ title }}</title>
+<style>
+body { font: 12px Arial, sans-serif; color: #17212e; margin: 28px; }
+h1 { font-size: 23px; margin-bottom: 8px; } p { line-height: 1.5; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { border: 1px solid #bbb; padding: 7px; text-align: left; overflow-wrap: anywhere; }
+th { background: #eef1f6; } thead { display: table-header-group; } tr { break-inside: avoid; }
+.notice { background: #f5f5f5; padding: 10px; }
+@page { size: A4 landscape; margin: 14mm; }
+@media print { body { margin: 0; } .instructions { display: none; } }
+</style></head><body>
+<h1>{{ title }}</h1>
+<p>{{ filters.start }} to {{ filters.end }} · Student filter: {{ filters.student|default:"All students" }}<br>
+Generated {{ generated_at|date:"Y-m-d H:i:s T" }} by {{ generated_by }} · {{ rows|length }} records</p>
+<p class="instructions">Use Ctrl+P to print or save as PDF. All matching rows are included, not just the preview page.</p>
+<p class="notice">Confidential school-use report. Well-being responses, private notes, excuse reasons and intervention findings are excluded. Risk reports contain confirmed results only; scores are support indicators, not diagnoses. Intervention dates filter case creation; displayed status is current at generation.</p>
+<table><thead><tr>{% for column in columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
+<tbody>{% for row in rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% empty %}<tr><td colspan="{{ columns|length }}">No matching records.</td></tr>{% endfor %}</tbody></table>
+</body></html>

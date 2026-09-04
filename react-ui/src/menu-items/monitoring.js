@@ -14,6 +14,6 @@ export const monitoring = {
         { id: 'well-being', title: 'Restricted Check-ins', type: 'item', url: '/well-being', icon: IconHeart, breadcrumbs: false, roles: ['ADMIN', 'GUIDANCE'] },
         { id: 'interventions', title: 'Interventions & Visits', type: 'item', url: '/interventions', icon: IconPhoneCall, breadcrumbs: false, roles: ['ADMIN', 'TEACHER', 'GUIDANCE'] },
         { id: 'notifications', title: 'SMS Notifications', type: 'item', url: '/notifications', icon: IconBellRinging, breadcrumbs: false, roles: ['ADMIN'] },
-        { id: 'reports', title: 'Reports & Audit Logs', type: 'item', url: '/module/reports', icon: IconReceipt2, breadcrumbs: false, roles: ['ADMIN', 'GUIDANCE'] }
+        { id: 'reports', title: 'Reports & Audit Logs', type: 'item', url: '/reports', icon: IconReceipt2, breadcrumbs: false, roles: ['ADMIN', 'GUIDANCE'] }
     ]
 };

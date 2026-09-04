@@ -27,7 +27,7 @@ const roadmap = [
     ['Sprint 7', 'Interventions and home visits', 'Implemented'],
     ['Sprint 8', 'Explainable risk assessment', 'Implemented'],
     ['Sprint 9', 'Restricted well-being check-ins', 'Implemented'],
-    ['Sprint 10', 'Reports and audit tools', 'Planned']
+    ['Sprint 10', 'Reports and audit tools', 'Implemented']
 ];
 
 const Dashboard = () => {

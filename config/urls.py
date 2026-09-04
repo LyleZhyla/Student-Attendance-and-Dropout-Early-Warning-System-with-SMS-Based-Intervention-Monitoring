@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 
 from core.views import react_app, react_asset
+from reports.api import audit_log_list, report_options, report_preview, report_print
 from core.api import dashboard_summary, login_api, logout_api, me_api
 from accounts.api import (
     admin_reset_password_api,
@@ -51,6 +52,10 @@ from risk_assessment.well_being_api import (
 )
 
 urlpatterns = [
+    path('api/reports/options/', report_options, name='api-report-options'),
+    path('api/reports/', report_preview, name='api-report-preview'),
+    path('api/reports/print/', report_print, name='api-report-print'),
+    path('api/audit-logs/', audit_log_list, name='api-audit-logs'),
     path('admin/', admin.site.urls),
     path('api/auth/login/', login_api, name='api-login'),
     path('api/auth/logout/', logout_api, name='api-logout'),

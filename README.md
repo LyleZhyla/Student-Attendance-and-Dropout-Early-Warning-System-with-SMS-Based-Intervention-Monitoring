@@ -80,6 +80,13 @@ TardyTrack is a student attendance and dropout early-warning system with an SMS-
 - Sanitized list views and audit metadata that exclude raw answers and private notes
 - Explicit separation of sensitive responses from automated risk scoring and messaging
 
+## Sprint 10 delivered
+
+- Attendance, intervention and confirmed-risk reports with date/student filters
+- Paginated previews and complete printable reports with explicit size limits
+- Administrator-only read-only audit viewer with date/action/actor filters
+- Sensitive-field exclusions and report-generation audit events
+
 ## Run locally (CMD)
 
 ### One-command launcher
@@ -115,6 +122,8 @@ Open `http://localhost:3000/`. The React interface and Django API use the same o
 The imported Berry template uses a legacy React 17 / Material UI beta dependency set. It builds successfully, but `npm audit` reports known transitive-package vulnerabilities. Treat the current UI as a development baseline and schedule a controlled dependency modernization before any public production deployment; do not run `npm audit fix --force` without a tested migration because it introduces breaking changes.
 
 ## Documentation
+
+- [Sprint 10 reports and audit logs](docs/SPRINT_10_REPORTS_AND_AUDIT.md)
 
 - [Sprint 1 requirements](docs/SPRINT_1_REQUIREMENTS.md)
 - [Database design and ERD](docs/DATABASE_DESIGN.md)

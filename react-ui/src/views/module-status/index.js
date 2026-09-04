@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Chip, Grid, Typography } from '@material-ui/core';
-import { useParams } from 'react-router-dom';
+import { Redirect, useParams } from 'react-router-dom';
 
 import MainCard from '../../ui-component/cards/MainCard';
 
@@ -16,6 +16,7 @@ const modules = {
 
 const ModuleStatus = () => {
     const { moduleKey } = useParams();
+    if (moduleKey === 'reports') return <Redirect to="/reports" />;
     const module = modules[moduleKey] || { title: 'Module', sprint: 'Planned', detail: 'This module is part of the approved TardyTrack roadmap.' };
 
     return (
